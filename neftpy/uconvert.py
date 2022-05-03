@@ -40,6 +40,14 @@ def Pa_2_psi(value):
     """
     return value / const.psi
 
+def Pa_2_psig(value):
+    """
+    converts pressure in abs Pa (Pascal) to gauged psig (pound-force per square inch)
+    :param value: pressure value in Pa
+    :return: pressure value in psi
+    """
+    return value / const.psi - 14.7
+
 def MPa_2_psi(value):
     """
     converts pressure in MPa (Mega Pascal, 1e6 Pa) to psi (pound-force per square inch)
@@ -47,6 +55,15 @@ def MPa_2_psi(value):
     :return: pressure value in Pa
     """
     return value * const.mega / const.psi
+
+def MPa_2_psig(value):
+    """
+    converts pressure 
+    in absolute MPa (Mega Pascal, 1e6 Pa) to measured psig (pound-force per square inch)
+    :param value: pressure value in MPa
+    :return: pressure value in Pa
+    """
+    return value * const.mega / const.psi - 14.7
 
 def bar_2_Pa(value):
     """
