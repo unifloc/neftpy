@@ -98,6 +98,15 @@ class PVTTestCase(unittest.TestCase):
                                     pvt._unf_rs_Velarde_m3m3_(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K)
                                     ) 
                         )
+                        
+    def test_unf_rsb_Mccain_m3m3(self):
+        rsp_m3m3 = 150
+        gamma_oil = 0.86
+        psp_MPaa = 5
+        tsp_K = 320
+        self.assertAlmostEqual(pvt.unf_rsb_Mccain_m3m3(rsp_m3m3, gamma_oil, psp_MPaa, tsp_K),
+                               161.03286985548442, delta=0.0001)
+
 # Executing the tests in the above test case class
 if __name__ == "__main__":
   unittest.main()

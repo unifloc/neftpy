@@ -217,7 +217,7 @@ _unf_rs_Standing_m3m3_ = np.vectorize(__unf_rs_Standing_m3m3__)
 unf_rs_Standing_m3m3 = _unf_rs_Standing_m3m3_
 
 
-def __unf_rs_Velarde_m3m3__(p_MPaa, pb_MPaa=10, rsb_m3m3=100, gamma_oil=0.86, gamma_gas=0.6, t_K=350):
+def __unf_rs_Velarde_m3m3__(p_MPaa, pb_MPaa=10, rsb_m3m3=100., gamma_oil=0.86, gamma_gas=0.6, t_K=350):
     """
         Solution Gas-oil ratio calculation according to Velarde McCain (1999) correlation
 
@@ -243,7 +243,7 @@ def __unf_rs_Velarde_m3m3__(p_MPaa, pb_MPaa=10, rsb_m3m3=100, gamma_oil=0.86, ga
         pr = 0
 
     if pr <= 0:
-        rs_m3m3 = 0
+        rs_m3m3 = 0.0
     elif pr < 1:
         A = np.array([9.73 * 10 ** (-7), 1.672608, 0.929870, 0.247235, 1.056052])
         B = np.array([0.022339, -1.004750, 0.337711, 0.132795, 0.302065])
@@ -279,3 +279,45 @@ _unf_rs_Velarde_m3m3_ = np.vectorize(__unf_rs_Velarde_m3m3__)
 # заготовка под полную векторизацию
 #todo надо сделать нормальную векторизацию _unf_rs_Standing_m3m3_ (простой тест сделан)
 unf_rs_Velarde_m3m3 = _unf_rs_Velarde_m3m3_
+
+
+
+
+def __unf_rsb_Mccain_m3m3__(rsp_m3m3, gamma_oil=0.86, psp_MPaa=0.0, tsp_K=0.0):
+    """
+        Solution Gas-oil ratio at bubble point pressure calculation according to McCain (2002) correlation
+    taking into account the gas losses at separator and stock tank
+
+    :param rsp_m3m3: separator producing gas-oil ratio, m3m3
+    :param gamma_oil: specific oil density(by water)
+    :param psp_MPaa: pressure in separator, MPaa
+    :param tsp_K: temperature in separator, K
+    :return: solution gas-oil ratio at bubble point pressure, rsb in m3/m3
+
+    часто условия в сепараторе неизвестны, может считать и без них по приблизительной формуле
+
+    ref1 "Reservoir oil bubblepoint pressures revisited; solution gas–oil ratios and surface gas specific gravities",
+    J. VELARDE, W.D. MCCAIN, 2002
+    """
+
+    rsp_scfstb = uc.m3m3_2_scfstb(rsp_m3m3)
+    if psp_MPaa > 0 and tsp_K > 0:
+        api = uc.gamma_oil_2_api(gamma_oil)
+        psp_psia = uc.Pa_2_psi(psp_MPaa * 10 ** 6)
+        tsp_F = uc.K_2_F(tsp_K)
+        z1 = -8.005 + 2.7 * np.log(psp_psia) - 0.161 * np.log(psp_psia) ** 2
+        z2 = 1.224 - 0.5 * np.log(tsp_F)
+        z3 = -1.587 + 0.0441 * np.log(api) - 2.29 * 10 ** (-5) * np.log(api) ** 2
+        z = z1 + z2 + z3
+        rst_scfstb = np.exp(3.955 + 0.83 * z - 0.024 * z ** 2 + 0.075 * z ** 3)
+        rsb = rsp_scfstb + rst_scfstb
+    elif rsp_m3m3 >= 0:
+        rsb = 1.1618 * rsp_scfstb
+    else:
+        rsb = 0
+    rsb = uc.scfstb_2_m3m3(rsb)
+    return rsb
+
+_unf_rsb_Mccain_m3m3_ = np.vectorize(__unf_rsb_Mccain_m3m3__)
+
+unf_rsb_Mccain_m3m3 = np.vectorize(__unf_rsb_Mccain_m3m3__)
