@@ -1,5 +1,6 @@
 import unittest
 import neftpy.upvt as pvt
+import neftpy.upvt_old as pvt_old
 import numpy as np
 
 #from ..neftpy.upvt import *
@@ -32,7 +33,7 @@ class PVTTestCase(unittest.TestCase):
         gamma_oil = 0.86
         gamma_gas = 0.6
         t_K = 350
-        res = pvt.unf_pb_Standing_MPaa(rsb_m3m3, gamma_oil, gamma_gas, t_K)  # naive vectorisation
+        res = pvt_old.unf_pb_Standing_MPaa(rsb_m3m3, gamma_oil, gamma_gas, t_K)  # naive vectorisation
         self.assertTrue(np.allclose(pvt.unf_pb_Standing_MPaa(rsb_m3m3, gamma_oil, gamma_gas, t_K), res))
 
     """
@@ -52,7 +53,7 @@ class PVTTestCase(unittest.TestCase):
         gamma_oil = 0.86
         gamma_gas = 0.6
         t_K = 350
-        res = pvt._unf_pb_Valko_MPaa_(rsb_m3m3, gamma_oil, gamma_gas, t_K)  # naive vectorisation
+        res = pvt_old.unf_pb_Valko_MPaa(rsb_m3m3, gamma_oil, gamma_gas, t_K)  # naive vectorisation
         self.assertTrue(np.allclose(pvt.unf_pb_Valko_MPaa(rsb_m3m3, gamma_oil, gamma_gas, t_K), res))
 
     def test_unf_rs_Standing_m3m3(self):
@@ -73,7 +74,7 @@ class PVTTestCase(unittest.TestCase):
         gamma_gas = 0.6
         t_K = 350
         self.assertTrue(np.allclose(pvt.unf_rs_Standing_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K),
-                                    pvt._unf_rs_Standing_m3m3_(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K)
+                                    pvt_old.unf_rs_Standing_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K)
                                     ) 
                         )
 
@@ -95,7 +96,7 @@ class PVTTestCase(unittest.TestCase):
         gamma_gas = 0.6
         t_K = 350
         self.assertTrue(np.allclose(pvt.unf_rs_Velarde_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K),
-                                    pvt._unf_rs_Velarde_m3m3_(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K)
+                                    pvt_old.unf_rs_Velarde_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K)
                                     ) 
                         )
                         
@@ -113,7 +114,7 @@ class PVTTestCase(unittest.TestCase):
         gamma_oil = 0.86
         psp_MPaa = 5
         tsp_K = 320
-        self.assertTrue(np.allclose(pvt._unf_rsb_Mccain_m3m3_(rsp_m3m3, gamma_oil, psp_MPaa, tsp_K),
+        self.assertTrue(np.allclose(pvt_old.unf_rsb_Mccain_m3m3(rsp_m3m3, gamma_oil, psp_MPaa, tsp_K),
                                     pvt.unf_rsb_Mccain_m3m3(rsp_m3m3, gamma_oil, psp_MPaa, tsp_K)
                                     ) 
                         )
@@ -123,14 +124,14 @@ class PVTTestCase(unittest.TestCase):
         cofb_1MPa = 3e-3
         pb_MPaa = 12
         p_MPaa = 15
-        self.assertAlmostEqual(pvt.__unf_bo_above_pb_m3m3__(bob, cofb_1MPa, pb_MPaa, p_MPaa), 1.2883524924047487, delta=0.0001)
+        self.assertAlmostEqual(pvt_old.unf_bo_above_pb_m3m3(bob, cofb_1MPa, pb_MPaa, p_MPaa), 1.2883524924047487, delta=0.0001)
 
     def test_array_unf_bo_above_pb_m3m3(self):
         bob = 1.3
         cofb_1MPa = 3e-3
         pb_MPaa = 12
         p_MPaa = np.linspace(0.1,10,20)
-        self.assertTrue(np.allclose(pvt._unf_bo_above_pb_m3m3_(bob, cofb_1MPa, pb_MPaa, p_MPaa),
+        self.assertTrue(np.allclose(pvt_old.unf_bo_above_pb_m3m3(bob, cofb_1MPa, pb_MPaa, p_MPaa),
                                     pvt.unf_bo_above_pb_m3m3(bob, cofb_1MPa, pb_MPaa, p_MPaa)
                                     ) 
                         )
@@ -149,7 +150,7 @@ class PVTTestCase(unittest.TestCase):
         rs_m3m3 = np.linspace(1,100,20)
         density_oil_kgm3 = 820
         gamma_gas = 0.6
-        self.assertTrue(np.allclose(pvt._unf_bo_below_pb_m3m3_(density_oilsto_kgm3, rs_m3m3, density_oil_kgm3, gamma_gas),
+        self.assertTrue(np.allclose(pvt_old.unf_bo_below_pb_m3m3(density_oilsto_kgm3, rs_m3m3, density_oil_kgm3, gamma_gas),
                                     pvt.unf_bo_below_pb_m3m3(density_oilsto_kgm3, rs_m3m3, density_oil_kgm3, gamma_gas)
                                     ) 
                         )
@@ -169,7 +170,7 @@ class PVTTestCase(unittest.TestCase):
 
 
     def test_array_unf_density_oil_Mccain(self):
-        p_MPaa = [0.1, 1,5,10, 20, 30]
+        p_MPaa = np.array([0.1, 1,5,10, 20, 30])
         pb_MPaa = 10
         co_1MPa = 3 * 10**(-3)
         rs_m3m3 = 150
