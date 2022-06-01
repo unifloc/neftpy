@@ -302,7 +302,7 @@ def unf_bo_saturated_Standing_m3m3(rs_m3m3=100, gamma_gas=0.8, gamma_oil=0.86, t
 
     rs_scfstb = uc.m3m3_2_scfstb(rs_m3m3)
     t_F = uc.K_2_F(t_K)
-    bo = 0.972 + 1.47 * 10 ** (-4) * (rs_scfstb * (gamma_gas / gamma_oil) ** 0.5 + 1.25 * t_F) ** 1.175
+    bo = 0.972 + 1.47e-4 * (rs_scfstb * (gamma_gas / gamma_oil) ** 0.5 + 1.25 * t_F) ** 1.175
     return bo
 
 
@@ -564,3 +564,99 @@ def unf_gamma_gas_Mccain(rsp_m3m3, rst_m3m3, gamma_gassp=0.8, gamma_oil=0.86, ps
                             0
                             )
                     )
+
+""" 
+====================================================================================================
+Корреляции расчета вязкости нефти
+====================================================================================================
+"""
+
+
+def unf_deadoilviscosity_Beggs_cP(gamma_oil, t_K):
+    """
+        Correlation for dead oil viscosity
+
+    :param gamma_oil: specific oil density (by water)
+    :param t_K: temperature, K
+    :return: dead oil viscosity,cP
+
+    ref1 Beggs, H.D. and Robinson, J.R. “Estimating the Viscosity of Crude Oil Systems.”
+    Journal of Petroleum Technology. Vol. 27, No. 9 (1975)
+
+    """
+    api = uc.gamma_oil_2_api(gamma_oil)
+    t_F = uc.K_2_F(t_K)
+    c = 10 ** (3.0324 - 0.02023 * api) * t_F ** (-1.163)  
+    return 10 ** c - 1
+
+def unf_saturatedoilviscosity_Beggs_cP(deadoilviscosity_cP, rs_m3m3):
+    """
+        Correlation for oil viscosity for pressure below bubble point (for pb!!!)
+
+    :param deadoilviscosity_cP: dead oil viscosity,cP
+    :param rs_m3m3: solution gas-oil ratio, m3m3
+    :return: oil viscosity,cP
+
+    ref1 Beggs, H.D. and Robinson, J.R. “Estimating the Viscosity of Crude Oil Systems.”
+    Journal of Petroleum Technology. Vol. 27, No. 9 (1975)
+
+    """
+    rs_scfstb = uc.m3m3_2_scfstb(rs_m3m3)
+    a = 10.715 * (rs_scfstb + 100) ** (-0.515)
+    b = 5.44 * (rs_scfstb + 150) ** (-0.338)
+    viscosity_cP = a * deadoilviscosity_cP ** b
+    return viscosity_cP
+
+def unf_undersaturatedoilviscosity_VB_cP(p_MPaa, pb_MPaa, bubblepointviscosity_cP):
+    """
+        Viscosity correlation for pressure above bubble point
+
+    :param p_MPaa: pressure, MPaa
+    :param pb_MPaa: bubble point pressure, MPaa
+    :param bubblepointviscosity_cP: oil viscosity at bubble point pressure, cP
+    :return: oil viscosity,cP
+
+    ref2 Vazquez, M. and Beggs, H.D. 1980. Correlations for Fluid Physical Property Prediction.
+    J Pet Technol 32 (6): 968-970. SPE-6719-PA
+
+    """
+    p_psia = uc.MPa_2_psi(p_MPaa)
+    pb_psia = uc.MPa_2_psi(pb_MPaa)
+    m = 2.6 * p_psia ** 1.187 * np.exp(-11.513 - 8.98e-5 * p_psia)
+    viscosity_cP = bubblepointviscosity_cP * (p_psia / pb_psia) ** m
+    return viscosity_cP
+
+def unf_oil_viscosity_Beggs_VB_cP(deadoilviscosity_cP, rs_m3m3, p_MPaa, pb_MPaa):
+    """
+        Function for calculating the viscosity at any pressure
+
+    :param deadoilviscosity_cP: dead oil viscosity,cP
+    :param rs_m3m3: solution gas-oil ratio, m3m3
+    :param p_MPaa: pressure, MPaa
+    :param pb_MPaa: bubble point pressure, MPaa
+    :return: oil viscosity,cP
+    """
+    saturatedviscosity_cP = unf_saturatedoilviscosity_Beggs_cP(deadoilviscosity_cP, rs_m3m3)
+    if p_MPaa <= pb_MPaa:
+        viscosity_cP = saturatedviscosity_cP
+    else:
+        viscosity_cP = unf_undersaturatedoilviscosity_VB_cP(p_MPaa, pb_MPaa, saturatedviscosity_cP)
+    return viscosity_cP
+
+
+
+def unf_heat_capacity_oil_Gambill_JkgC(gamma_oil, t_c):
+    """
+        Oil heat capacity in SI. Gambill correlation
+
+    :param gamma_oil: specific oil density(by water)
+    :param t_c: temperature in C
+    :return: heat capacity in SI - JkgC
+
+    ref1 Book: Brill J. P., Mukherjee H. K. Multiphase flow in wells. –
+    Society of Petroleum Engineers, 1999. – Т. 17. in Page 122
+    """
+
+    t_f = uc.C_2_F(t_c)
+    heat_capacity_oil_btulbmF = ((0.388 + 0.00045 * t_f) / gamma_oil ** (0.5))
+    return uc.btulbmF_2_kJkgK(heat_capacity_oil_btulbmF) * 1000

@@ -7,7 +7,7 @@ import scipy.constants as const
 
 g = const.g   # gravity
 pi = const.pi
-ppressure_sc_bar = 1   # pressure standard condition
+pressure_sc_bar = 1   # pressure standard condition
 temperature_sc_C = 15    # temperature standard condition
 const_at = 98066.5  # technical atmosphere in Pa,  техническая атмосфера в Па
 air_density_sc_kgm3 = 1.225  # definition from https://en.wikipedia.org/wiki/Density_of_air
