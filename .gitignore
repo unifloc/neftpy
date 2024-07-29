@@ -8,3 +8,5 @@ dist/
 build/
 welltest.egg*
 venv/
+~*.*
+neftpy.egg-info/*

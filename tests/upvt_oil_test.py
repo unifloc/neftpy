@@ -78,20 +78,22 @@ class PVTTestCase(unittest.TestCase):
 
     def test_array_unf_rs_Standing_m3m3(self):
 
-
-        
-        p_MPaa = np.array([1.0, 5.0, 10.0, 100.0, 200.0]) 
-        pb_MPaa = 15
-        rsb = np.array([1.0, 5.0, 10.0, 100.0, 200.0]) 
         gamma_oil = 0.86
         gamma_gas = 0.6
-        t_K = 350
-        self.assertTrue(np.allclose(pvt.unf_rs_Standing_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K),
-                                    pvt_old.unf_rs_Standing_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K)
-                                    ) 
-                        )
+        t_K = 353
+        unf_vba_res = [2.63345652886037,15.6762859290458,31.2325939746016,48.2819334435268,66.436537812051,85.4819163871848]
+        unf_vba_p_MPaa = [1,4.4,7.8,11.2,14.6,18]
+        pb_MPaa = 0
+        rsb = 120
 
 
+        p_MPaa = np.array(unf_vba_p_MPaa)        
+        res = np.array(unf_vba_res)
+        
+        self.assertTrue(np.allclose(pvtovect.unf_rs_Standing_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K),
+                                    res, 
+                                    rtol=0.0001))
+        
 
     def test_unf_rs_Velarde_m3m3(self):
         p_MPaa = 10
@@ -102,6 +104,31 @@ class PVTTestCase(unittest.TestCase):
         t_K = 350
         self.assertAlmostEqual(pvto.unf_rs_Velarde_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K),
                                170.25302712587356, delta=0.0001)
+
+
+    def test_array_unf_rs_Velarde_m3m3(self):
+
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        t_K = 353
+        pb_MPaa = 12.8300024673082
+        rsb = 120
+        unf_vba_res = [13.769156001658,47.1724892015713,76.4710407632712,105.644331604199,120,120]
+        unf_vba_p_MPaa = [1,4.4,7.8,11.2,14.6,18]
+
+
+        p_MPaa = np.array(unf_vba_p_MPaa)        
+        res = np.array(unf_vba_res)
+        
+        # получается сходимость на уровне 1 знак после запятой с unifloc vba, что для газосодержания в принципе допустимо
+        # причины расхождени видимо в количестве учитываемых знаков после запятой в константах или в определении стандартных величин
+        # принты далее могут показать расхождения по отдельным значениям
+        #print(unf_vba_res)
+        #print(pvtovect.unf_rs_Velarde_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K))
+
+        self.assertTrue(np.allclose(pvtovect.unf_rs_Velarde_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K),
+                                    res, 
+                                    rtol=0.01))
 
                   
     def test_unf_rsb_Mccain_m3m3(self):

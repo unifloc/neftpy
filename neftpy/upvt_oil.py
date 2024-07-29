@@ -106,7 +106,8 @@ def unf_rs_Standing_m3m3(p_MPaa:float=1,
                          rsb_m3m3:float=0, 
                          gamma_oil:float=0.86, 
                          gamma_gas:float=0.6, 
-                         t_K:float=350
+                         t_K:float=350,
+                         calc_drs_dp:bool=False
                          )->float:
     """
     Расчет газосодержания в нефти при заданном давлении и температуре Standing (1947)
@@ -118,7 +119,9 @@ def unf_rs_Standing_m3m3(p_MPaa:float=1,
     :param gamma_oil: удельная плотность нефти
     :param gamma_gas: удельная плотность газа
     :param t_K: температура, К
+    :param calc_drs_dp: флаг расчета производной, по умолчанию нет
     :return: газосодержание при заданном давлении и температуре, m3/m3
+             или производная - в зависимости от флага calc_drs_dp
 
     ref1 "A Pressure-Volume-Temperature Correlation for Mixtures of California Oil and Gases",
     M.B. Standing, Drill. & Prod. Prac., API, 1947.
@@ -130,12 +133,24 @@ def unf_rs_Standing_m3m3(p_MPaa:float=1,
     if pb_MPaa == 0 or rsb_m3m3 == 0:
         # мольная доля газа
         yg = 1.225 + 0.001648 * t_K - 1.769 / gamma_oil
-        rs_m3m3 = gamma_gas * (1.92 * p_MPaa / 10 ** yg) ** 1.204
+        if calc_drs_dp:
+            drs_dp = gamma_gas * (1.92 / 10**yg) ** 1.204 * 1.204 * p_MPaa ^ 0.204
+        else:
+            rs_m3m3 = gamma_gas * (1.92 * p_MPaa / 10**yg) ** 1.204
     elif p_MPaa < pb_MPaa:
-        rs_m3m3 = rsb_m3m3 * (p_MPaa / pb_MPaa) ** 1.204
+        if calc_drs_dp:
+            drs_dp = rsb_m3m3 * (1 / pb_MPaa) ** 1.204 * 1.204 * p_MPaa ^ 0.204
+        else:
+            rs_m3m3 = rsb_m3m3 * (p_MPaa / pb_MPaa) ** 1.204
     else:
-        rs_m3m3 = rsb_m3m3
-    return rs_m3m3
+        if calc_drs_dp:
+            drs_dp = 0
+        else:
+            rs_m3m3 = rsb_m3m3
+    if calc_drs_dp:
+        return drs_dp
+    else:
+        return rs_m3m3
 
 
 
@@ -161,6 +176,13 @@ def unf_rs_Velarde_m3m3(p_MPaa:float=1,
     J. VELARDE, T.A. BLASINGAME Texas A&M University, W.D. MCCAIN, JR. S.A. Holditch & Associates, Inc 1999
 
     """
+
+    pb_estimation_Valko_McCain = unf_pb_Valko_MPaa(RS_MAX_Velarde, gamma_oil, gamma_gas, t_K)
+    if (pb_MPaa > pb_estimation_Valko_McCain):
+        if p_MPaa < pb_MPaa:
+            return rsb_m3m3 * p_MPaa / pb_MPaa
+        else:
+            return rsb_m3m3
 
     api = gamma_oil_2_api(gamma_oil)
     t_F = K_2_F(t_K)
@@ -191,10 +213,10 @@ def unf_rs_Velarde_m3m3(p_MPaa:float=1,
 
 
 def unf_rsb_Mccain_m3m3(rsp_m3m3:float=10, 
-                            gamma_oil:float=0.86, 
-                            psp_MPaa:float=0.0, 
-                            tsp_K:float=0.0
-                            )->float:
+                        gamma_oil:float=0.86, 
+                        psp_MPaa:float=0.0, 
+                        tsp_K:float=0.0
+                        )->float:
     """
         Solution Gas-oil ratio at bubble point pressure calculation according to McCain (2002) correlation
     taking into account the gas losses at separator and stock tank
@@ -226,7 +248,6 @@ def unf_rsb_Mccain_m3m3(rsp_m3m3:float=10,
         rsb = 1.1618 * rsp_scfstb
     else:
         rsb = 0
-    rsb = scfstb_2_m3m3(rsb)
-    return rsb
+    return scfstb_2_m3m3(rsb)
 
 
