@@ -3,7 +3,6 @@ import neftpy.upvt as pvt
 import neftpy.upvt_old as pvt_old
 import numpy as np
 
-#from ..neftpy.upvt import *
 
 class PVTTestCase(unittest.TestCase):
 

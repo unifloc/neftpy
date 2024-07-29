@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: neftpy
+Version: 0.1
+Summary: Petroluem production engineering calculations package. Inspired by Unifloc VBA.
+Home-page: https://github.com/unifloc/neftpy
+Author: Rinat Khabibullin
+Author-email: khabibullinra@gmail.com
+License: BSD 3-Clause License
+License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: scipy
+
+# neftpy
+
+test

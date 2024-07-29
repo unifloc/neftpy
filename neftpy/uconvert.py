@@ -1,23 +1,9 @@
 """
 Constant and units conversion functions for for petroleum engineering calculations
 """
-import numpy as np
+
 import scipy.constants as const
-
-
-g = const.g   # gravity
-pi = const.pi
-pressure_sc_bar = 1   # pressure standard condition
-temperature_sc_C = 15    # temperature standard condition
-const_at = 98066.5  # technical atmosphere in Pa,  техническая атмосфера в Па
-air_density_sc_kgm3 = 1.225  # definition from https://en.wikipedia.org/wiki/Density_of_air
-rho_water_sc_kgm3 = 1000
-
-# some default values 
-default_z = 0.9
-default_gamma_gas = 0.8
-default_rsb_m3m3 = 100
-
+from neftpy.uconst import *
 
 # simple unit conversion functions
 
@@ -46,7 +32,7 @@ def Pa_2_psig(value):
     :param value: pressure value in Pa
     :return: pressure value in psi
     """
-    return value / const.psi - 14.7
+    return value / const.psi - P_SC_PSI
 
 def MPa_2_psi(value):
     """
@@ -63,7 +49,7 @@ def MPa_2_psig(value):
     :param value: pressure value in MPa
     :return: pressure value in Pa
     """
-    return value * const.mega / const.psi - 14.7
+    return value * const.mega / const.psi - P_SC_PSI
 
 def bar_2_Pa(value):
     """
