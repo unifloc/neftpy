@@ -137,7 +137,115 @@ class PVTTestCase(unittest.TestCase):
         psp_MPaa = 5
         tsp_K = 320
         self.assertAlmostEqual(pvto.unf_rsb_Mccain_m3m3(rsp_m3m3, gamma_oil, psp_MPaa, tsp_K),
-                               161.03286985548442, delta=0.0001)
+                               161.03286985548442, 
+                               delta=0.0001)
+        
+    
+    def test_unf_bo_above_pb_m3m3(self):
+        bob = 1.3
+        cofb_1MPa = 3e-3
+        pb_MPaa = 12
+        p_MPaa = 15
+        self.assertAlmostEqual(pvto.unf_bo_above_pb_m3m3(bob, cofb_1MPa, pb_MPaa, p_MPaa), 
+                               1.2883524924047487, 
+                               delta=0.0001)
+
+
+    def test_unf_bo_below_m3m3(self):
+        density_oilsto_kgm3 = 800
+        rs_m3m3 = 200
+        density_oil_kgm3 = 820
+        gamma_gas = 0.6
+        self.assertAlmostEqual(pvto.unf_bo_below_pb_m3m3(density_oilsto_kgm3, rs_m3m3, density_oil_kgm3, gamma_gas),
+                               1.1542114715227887, 
+                               delta=0.001
+                               )
+        
+
+        
+    def test_array_unf_bo_saturated_Standing_m3m3(self):
+        """ compares array input for vectorised realisations """
+
+        # векторные значения импортированы из расчета unifloc vba
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        t_K = 353
+        unf_vba_res = [1.05686373329632,1.19233438531874,1.34242780220036,1.50241084963365,1.67002047706012,1.8438982299009]
+        unf_vba_rsb = [1,60.8,120.6,180.4,240.2,300]
+
+
+        rsb_m3m3 = np.array(unf_vba_rsb)        
+        res = np.array(unf_vba_res)
+        
+        self.assertTrue(np.allclose(pvto.unf_bo_saturated_Standing_m3m3(rsb_m3m3,  gamma_gas, gamma_oil, t_K), 
+                                    res, 
+                                    rtol=0.001))
+        
+        
+    def test_unf_density_oil_Mccain(self):
+        p_MPaa = 10
+        pb_MPaa = 12
+        co_1MPa = 3e-3
+        rs_m3m3 = 250
+        gamma_gas = 0.6
+        t_K = 350
+        gamma_oil = 0.86
+        gamma_gassp = 0
+        self.assertAlmostEqual(pvto.unf_density_oil_Mccain(p_MPaa, pb_MPaa, co_1MPa, rs_m3m3, gamma_gas, t_K, gamma_oil,
+                               gamma_gassp), 
+                               630.0536681794456, 
+                               delta=0.0001)
+
+    def test_array_unf_density_oil_Mccain(self):
+        p_MPaa = np.array([0.1, 1,5,10, 20, 30])
+        pb_MPaa = 10
+        co_1MPa = 3e-3
+        rs_m3m3 = 150
+        gamma_gas = 0.6
+        t_K = 350
+        gamma_oil = 0.86
+        gamma_gassp = 0
+        self.assertTrue(np.allclose(pvto.unf_density_oil_Mccain(p_MPaa, pb_MPaa, co_1MPa, rs_m3m3, gamma_gas, t_K, gamma_oil,
+                               gamma_gassp),
+                               [684.20874678, 684.97844157, 688.3460601,  692.43351253, 713.52125245, 735.25120966]) )
+  
+
+    def test_unf_density_oil_Standing(self):
+        p_MPaa = 10
+        pb_MPaa = 12
+        co_1MPa = 3e-3
+        rs_m3m3 = 250
+        bo_m3m3 = 1.1
+        gamma_gas = 0.6
+        gamma_oil = 0.86
+        self.assertAlmostEqual(pvto.unf_density_oil_Standing(p_MPaa, pb_MPaa, co_1MPa, rs_m3m3, bo_m3m3, gamma_gas, gamma_oil), 
+                               948.863636, 
+                               delta=0.0001)
+        # значение изменено по сравнению с выводом унифлок vba на 0.13 из за корректировки плотности воздуха
+        
+    def test_unf_compressibility_oil_VB_1Mpa(self):
+        rs_m3m3 = 200
+        t_K = 350
+        gamma_oil = 0.86
+        p_MPaa = 15
+        gamma_gas = 0.6
+        self.assertAlmostEqual(pvto.unf_compressibility_oil_VB_1Mpa(rs_m3m3, t_K, gamma_oil, p_MPaa, gamma_gas),
+                               0.004546552811369566, 
+                               delta=0.0001)
+
+
+    def test_unf_gamma_gas_Mccain(self):
+        rsp_m3m3 = 30
+        rst_m3m3 = 20
+        gamma_gassp = 0.65
+        gamma_oil = 0.86
+        psp_MPaa = 5
+        tsp_K = 350
+        self.assertAlmostEqual(pvto.unf_gamma_gas_Mccain(rsp_m3m3, rst_m3m3, gamma_gassp, gamma_oil, psp_MPaa, tsp_K),
+                               0.7932830162938984, 
+                               delta=0.0001)
+
+
 
 # Executing the tests in the above test case class
 if __name__ == "__main__":
