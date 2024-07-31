@@ -17,6 +17,13 @@ def psi_2_Pa(value):
     """
     return value * const.psi
 
+def psi_2_MPa(value):
+    """
+    converts pressure in psi (pound-force per square inch) to MPa (Mega Pascal)
+    :param value: pressure value in psi
+    :return: pressure value in Pa
+    """
+    return value * const.psi / const.mega 
 
 def Pa_2_psi(value):
     """

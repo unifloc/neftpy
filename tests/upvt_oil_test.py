@@ -4,7 +4,7 @@ import neftpy.upvt_np_vect as pvtovect
 
 import numpy as np
 
-class PVTTestCase(unittest.TestCase):
+class PVToTestCase(unittest.TestCase):
 
     """
     Расчет давления насыщения по Стендингу
@@ -106,6 +106,16 @@ class PVTTestCase(unittest.TestCase):
                                170.25302712587356, delta=0.0001)
 
 
+    def test_unf_rs_Velarde_2_m3m3(self):
+        p_MPaa = 10
+        pb_MPaa = 15
+        rsb = 250
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        t_K = 350
+        self.assertAlmostEqual(pvto._unf_rs_Velarde_m3m3_(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K),
+                               170.25302712587356, delta=0.0001)
+
     def test_array_unf_rs_Velarde_m3m3(self):
 
         gamma_oil = 0.86
@@ -127,6 +137,30 @@ class PVTTestCase(unittest.TestCase):
         #print(pvtovect.unf_rs_Velarde_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K))
 
         self.assertTrue(np.allclose(pvtovect.unf_rs_Velarde_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K),
+                                    res, 
+                                    rtol=0.01))
+
+    def test_array_unf_rs_Velarde_2_m3m3(self):
+
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        t_K = 353
+        pb_MPaa = 12.8300024673082
+        rsb = 120
+        unf_vba_res = [13.769156001658,47.1724892015713,76.4710407632712,105.644331604199,120,120]
+        unf_vba_p_MPaa = [1,4.4,7.8,11.2,14.6,18]
+
+
+        p_MPaa = np.array(unf_vba_p_MPaa)        
+        res = np.array(unf_vba_res)
+        
+        # получается сходимость на уровне 1 знак после запятой с unifloc vba, что для газосодержания в принципе допустимо
+        # причины расхождени видимо в количестве учитываемых знаков после запятой в константах или в определении стандартных величин
+        # принты далее могут показать расхождения по отдельным значениям
+        #print(unf_vba_res)
+        #print(pvtovect.unf_rs_Velarde_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K))
+
+        self.assertTrue(np.allclose(pvtovect.unf_rs_Velarde_2_m3m3(p_MPaa, pb_MPaa, rsb, gamma_oil, gamma_gas, t_K),
                                     res, 
                                     rtol=0.01))
 
@@ -161,7 +195,13 @@ class PVTTestCase(unittest.TestCase):
                                delta=0.001
                                )
         
-
+    def test_unf_fvf_Standing_m3m3_saturated(self):
+        rs_m3m3 = 200
+        gamma_gas = 0.6
+        gamma_oil = 0.86
+        t_K = 350
+        self.assertAlmostEqual(pvto.unf_bo_saturated_Standing_m3m3(rs_m3m3, gamma_gas, gamma_oil, t_K),
+                               1.5527836202040448, delta=0.0001)
         
     def test_array_unf_bo_saturated_Standing_m3m3(self):
         """ compares array input for vectorised realisations """
@@ -222,7 +262,17 @@ class PVTTestCase(unittest.TestCase):
                                948.863636, 
                                delta=0.0001)
         # значение изменено по сравнению с выводом унифлок vba на 0.13 из за корректировки плотности воздуха
-        
+    
+    def test_unf_compressibility_saturated_oil_VB_1Mpa(self):
+        rsb_m3m3 = 200
+        t_k = 350
+        gamma_oil = 0.86
+        p_MPaa = 10
+        pb_mpa = 15
+        self.assertAlmostEqual(pvto.unf_compressibility_saturated_oil_McCain_1Mpa(p_MPaa, pb_mpa, t_k, gamma_oil, rsb_m3m3),
+                               0.004934802450463976, 
+                               delta=0.003)
+ 
     def test_unf_compressibility_oil_VB_1Mpa(self):
         rs_m3m3 = 200
         t_K = 350
@@ -246,7 +296,148 @@ class PVTTestCase(unittest.TestCase):
                                delta=0.0001)
 
 
+    def test_unf_deadoilviscosity_Beggs_cP(self):
+        gamma_oil = 0.86
+        t_K = 350
+        self.assertAlmostEqual(pvto.unf_deadoilviscosity_Beggs_cP(gamma_oil, t_K), 
+                               2.86938394460968, 
+                               delta=0.0001)
 
+    def test_unf_saturatedoilviscosity_Beggs_cP(self):
+        deadoilviscosity_cP = 2.87
+        rs_m3m3 = 150
+        self.assertAlmostEqual(pvto.unf_saturatedoilviscosity_Beggs_cP(deadoilviscosity_cP, rs_m3m3), 
+                               0.5497153091178292,
+                               delta=0.0001)
+
+    def test_unf_undersaturatedoilviscosity_VB_cP(self):
+        p_MPaa = 10
+        pb_MPaa = 12
+        bubblepointviscosity_cP = 1
+        self.assertAlmostEqual(pvto.unf_undersaturatedoilviscosity_VB_cP(p_MPaa, pb_MPaa, bubblepointviscosity_cP),
+                               0.9767303348551418, 
+                               delta=0.0001)
+
+
+    def test_unf_oil_viscosity_Beggs_VB_cP(self):
+        deadoilviscosity_cP = 2.87
+        rs_m3m3 = 150
+        p_MPaa = 10
+        pb_MPaa = 12
+        self.assertAlmostEqual(pvto.unf_oil_viscosity_Beggs_VB_cP(deadoilviscosity_cP, rs_m3m3, p_MPaa, pb_MPaa),
+                               0.5497153091178292, 
+                               delta=0.0001)
+        
+    def test_unf_heat_capacity_oil_Gambill_JkgC(self):
+        gamma_oil = 0.8
+        t_c = 60
+        self.assertAlmostEqual(pvto.unf_heat_capacity_oil_Gambill_JkgC(gamma_oil, t_c),
+                               2110.7207148850844,
+                               delta=0.0001)
+
+    def test_unf_thermal_conductivity_oil_Cragoe_WmK(self):
+        gamma_oil = 0.8
+        t_c = 60
+        self.assertAlmostEqual(pvto.unf_thermal_conductivity_oil_Cragoe_WmK(gamma_oil, t_c),
+                               0.1427090525,
+                               delta=0.0001)
+
+    def test_unf_deadoilviscosity_Standing(self):
+        t_K = 353
+        gamma_oil = 0.86
+        val = 2.19722776476976
+        self.assertAlmostEqual(pvto.unf_deadoilviscosity_Standing(gamma_oil, t_K),
+                               val,
+                               delta=0.01)
+
+
+    def test_unf_deadoilviscosity_BeggsRobinson_VBA_cP(self):
+        gamma_oil = 0.8
+        t_K = 300
+        self.assertAlmostEqual(pvto.unf_deadoilviscosity_BeggsRobinson_cP(gamma_oil, t_K),
+                               5.264455765058494,
+                               delta=0.1)
+        
+    def test_unf_deadoilviscosity_BeggsRobinson_cP(self):
+        t_K = 353
+        gamma_oil = 0.86
+        val = 2.68955979075439
+
+        self.assertAlmostEqual(pvto.unf_deadoilviscosity_BeggsRobinson_cP(gamma_oil, t_K),
+                               val,
+                               delta=0.0001)
+
+    def test_unf_viscosity_oil_Standing_cP(self):
+        rs = 100
+        nu = 2
+        p = 10
+        pb = 12
+        val = 0.716575048793071
+
+
+        self.assertAlmostEqual(pvto.unf_viscosity_oil_Standing_cP(rs, nu, p, pb),
+                               val,
+                               delta=0.0001)
+        
+
+    def test_unf_undersaturatedoilviscosity_Petrovsky_cP(self):
+        p_MPaa = 10
+        pb_MPaa = 12
+        bubblepointviscosity_cP = 1
+        self.assertAlmostEqual(pvto.unf_undersaturatedoilviscosity_Petrovsky_cP(p_MPaa, pb_MPaa, bubblepointviscosity_cP),
+                               0.9622774530985722, 
+                               delta=0.0001)
+
+    def test_unf_pb_Glaso_MPaa(self):
+        rs_m3m3 = 100
+        t_K = 350
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        self.assertAlmostEqual(pvto.unf_pb_Glaso_MPaa(rs_m3m3, t_K, gamma_oil, gamma_gas), 23.365669948236604, delta=0.0001)
+
+    def test_unf_fvf_Glaso_m3m3_saturated(self):
+        rs_m3m3 = 100
+        t_K = 350
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        self.assertAlmostEqual(pvto.unf_bo_saturated_Glaso_m3m3(rs_m3m3, t_K, gamma_oil, gamma_gas), 1.2514004319480372,
+                               delta=0.0001)
+
+    def test_unf_fvf_Glaso_m3m3_below(self):
+        rs_m3m3 = 100
+        t_K = 350
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        p_MPaa = 10
+        self.assertAlmostEqual(pvto.unf_bo_below_Glaso_m3m3(rs_m3m3, t_K, gamma_oil, gamma_gas, p_MPaa), 1.7091714311161692,
+                               delta=0.0001)
+
+    def test_unf_McCain_specificgravity(self):
+        p_MPaa = 10
+        rsb_m3m3 = 100
+        t_K = 350
+        gamma_oil = 0.8
+        gamma_gassp = 0.6
+        self.assertAlmostEqual(pvto.unf_McCain_specificgravity(p_MPaa, rsb_m3m3, t_K, gamma_oil, gamma_gassp), 0.6004849666507259,
+                               delta=0.0001)
+        
+    def test_unf_heat_capacity_oil_Wes_Wright_JkgC(self):
+        gamma_oil = 0.8
+        t_c = 60
+        self.assertAlmostEqual(pvto.unf_heat_capacity_oil_Wes_Wright_JkgC(gamma_oil, t_c),
+                               2162.0, delta=0.0001)
+
+    def test_unf_thermal_conductivity_oil_Abdul_Seoud_Moharam_WmK(self):
+        gamma_oil = 0.8
+        t_c = 60
+        self.assertAlmostEqual(pvto.unf_thermal_conductivity_oil_Abdul_Seoud_Moharam_WmK(gamma_oil, t_c),
+                               0.10999860144810972, delta=0.0001)
+
+    def test_unf_thermal_conductivity_oil_Smith_WmK(self):
+        gamma_oil = 0.8
+        t_c = 60
+        self.assertAlmostEqual(pvto.unf_thermal_conductivity_oil_Smith_WmK(gamma_oil, t_c),
+                               0.16568762875, delta=0.0001)
 # Executing the tests in the above test case class
 if __name__ == "__main__":
   unittest.main()
