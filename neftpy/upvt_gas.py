@@ -202,6 +202,40 @@ def unf_zfactor_DAK_ppr(ppr:float, tpr:float)->float:
     """
     return solution[0]
 
+def unf_zfactor_DAK_ppr_(ppr:float, tpr:float)->float:
+    """
+        Correlation for z-factor
+
+    :param ppr: pseudoreduced pressure
+    :param tpr: pseudoreduced temperature
+    :return: z-factor
+
+    range of applicability is (0.2<=ppr<30 and 1.0<tpr<=3.0) and also ppr < 1.0 for 0.7 < tpr < 1.0
+
+    ref 1 Dranchuk, P.M. and Abou-Kassem, J.H. “Calculation of Z Factors for Natural
+    Gases Using Equations of State.” Journal of Canadian Petroleum Technology. (July–September 1975) 34–36.
+
+    """
+
+    z0 = 1
+    ropr0 = 0.27 * (ppr / (z0 * tpr))
+
+    def f(variables):
+        z, ropr = variables
+        func = np.zeros(2)
+        func[0] = 0.27 * (ppr / (z * tpr)) - ropr
+        func[1] = -z + 1 + \
+                (0.3265 - 1.0700 / tpr - 0.5339 / tpr**3 + 0.01569 / tpr ** 4 - 0.05165 / tpr ** 5) * ropr +\
+                (0.5475 - 0.7361 / tpr + 0.1844 / tpr ** 2) * ropr ** 2 - \
+                0.1056 * (-0.7361 / tpr + 0.1844 / tpr ** 2) * ropr ** 5 + \
+                0.6134 * (1 + 0.7210 * ropr ** 2) * (ropr ** 2 / tpr ** 3) * np.exp(-0.7210 * ropr ** 2)
+        return func
+    solution = opt.fsolve(f, np.array([z0, ropr0]))
+    """
+    solution = opt.newton(f, z0, maxiter=150, tol=1e-4)
+    """
+    return solution[0]
+
 
 def unf_z_factor_Kareem(Tpr:float, 
                         Ppr:float
@@ -403,19 +437,6 @@ def unf_thermal_conductivity_gas_methane_WmK(t_c:float)->float: # TODO заме�
     требует корректировки, является временной затычкой, взята от безысходности
     """
     return (42.1 + (42.1 - 33.1)/(80-18)*(t_c - 80))/1000
-# uPVT свойства для сжимаемости нефти(требует немного свойств газа)
-
-"""
-def unf_weightedcompressibility_oil_Mccain_1MPa_greater(gamma_oil, gamma_gas, pb_MPa, p_MPa, rsb_m3m3, tres_K, gamma_gassp = 0):
-
-    pass
 
 
-def unf_compressibility_oil_Mccain_1MPa_greater(gamma_oil, gamma_gas, pb_MPa, p_MPa, rsb_m3m3, tres_K, gamma_gassp = 0):
 
-    pass
-
-
-def unf_compressibility_oil_Mccain_1MPa_lower():
-    pass
-"""
