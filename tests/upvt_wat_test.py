@@ -1,6 +1,6 @@
 import unittest
 import neftpy.upvt_wat as pvtw
-import neftpy.upvt_np_vect as pvtovect
+import neftpy.upvt_np_vect as pvt_vect
 
 import numpy as np
 

@@ -6,22 +6,22 @@ import scipy.optimize as opt
 
 """ 
 ====================================================================================================
-Корреляции расчета давления насыщения
+Расчет давления насыщения
 ====================================================================================================
 """
 
-def unf_pb_Standing_MPaa(rsb_m3m3:float=100, 
+def unf_pb_Standing_MPaa(t_K:float=350,
+                         rsb_m3m3:float=100, 
                          gamma_oil:float=0.86, 
-                         gamma_gas:float=0.6, 
-                         t_K:float=350
+                         gamma_gas:float=0.6
                          )->float:
     """
     Расчет давления насыщения Standing (1947)
 
+    :param t_K: температура, К 
     :param rsb_m3m3: газосодержание при давлении насыщения, должно быть указано, м3/м3 
     :param gamma_oil: удельная плотность нефти (от воды) 
     :param gamma_gas: удельная плотность газа (от воздуха) 
-    :param t_K: температура, К 
     :return: давление насыщения, МПа абсолютное 
 
     ref1 "A Pressure-Volume-Temperature Correlation for Mixtures of California Oil and Gases",
@@ -44,18 +44,18 @@ def unf_pb_Standing_MPaa(rsb_m3m3:float=100,
                     )
 
 
-def unf_pb_Valko_MPaa(rsb_m3m3:float=100, 
-                        gamma_oil:float=0.86, 
-                        gamma_gas:float=0.6,
-                        t_K:float=350
-                        )->float:
+def unf_pb_Valko_MPaa(t_K:float=350,
+                      rsb_m3m3:float=100, 
+                      gamma_oil:float=0.86, 
+                      gamma_gas:float=0.6
+                      )->float:
     """
     Расчет давления насыщения Valko McCain (2002)
 
+    :param t_K: температура, К 
     :param rsb_m3m3: газосодержание при давлении насыщения, должно быть указано, м3/м3 
     :param gamma_oil: удельная плотность нефти (от воды) 
     :param gamma_gas: удельная плотность газа (от воздуха) 
-    :param t_K: температура, К 
     :return: давление насыщения, МПа абсолютное 
 
     ref SPE  "Reservoir oil bubblepoint pressures revisited; solution gas–oil ratios and surface gas specific gravities"
@@ -97,12 +97,16 @@ def unf_pb_Valko_MPaa(rsb_m3m3:float=100,
     return pb_MPaa
 
 
-def unf_pb_Glaso_MPaa(rs_m3m3, t_K, gamma_oil, gamma_gas):
+def unf_pb_Glaso_MPaa(t_K:float=350, 
+                      rs_m3m3:float=100, 
+                      gamma_oil:float=0.85, 
+                      gamma_gas:float=0.8
+                      )->float:
     """
         Glaso correlation(1980) for bubble point pressure
 
-    :param rs_m3m3: gas-oil ratio in m3/m3
     :param t_K: temperature in K
+    :param rs_m3m3: gas-oil ratio in m3/m3
     :param gamma_oil: oil density (by water)
     :param gamma_gas: gas density (by air)
     :return: bubble point pressure im MPa abs
@@ -122,17 +126,17 @@ def unf_pb_Glaso_MPaa(rs_m3m3, t_K, gamma_oil, gamma_gas):
 
 """ 
 ====================================================================================================
-Корреляции расчета газосодержания (Gas Solution Ratio)
+Расчет газосодержания (Gas Solution Ratio) в нефти
 ====================================================================================================
 """
 
 
 def unf_rs_Standing_m3m3(p_MPaa:float=1, 
+                         t_K:float=350,
                          pb_MPaa:float=10,
                          rsb_m3m3:float=0, 
                          gamma_oil:float=0.86, 
                          gamma_gas:float=0.6, 
-                         t_K:float=350,
                          calc_drs_dp:bool=False
                          )->float:
     """
@@ -140,11 +144,11 @@ def unf_rs_Standing_m3m3(p_MPaa:float=1,
     используется зависимость обратная к корреляции между давлением насыщения и газосодержанием
 
     :param p_MPaa: давление, MPa
+    :param t_K: температура, К
     :param pb_MPaa: давление насыщения, MPa
     :param rsb_m3m3: газосодержание при давлении насыщения, m3/m3
     :param gamma_oil: удельная плотность нефти
     :param gamma_gas: удельная плотность газа
-    :param t_K: температура, К
     :param calc_drs_dp: флаг расчета производной, по умолчанию нет
     :return: газосодержание при заданном давлении и температуре, m3/m3
              или производная - в зависимости от флага calc_drs_dp
@@ -184,21 +188,21 @@ def unf_rs_Standing_m3m3(p_MPaa:float=1,
 
 
 def _unf_rs_Velarde_m3m3_(p_MPaa:float=1, 
-                        pb_MPaa:float=10, 
-                        rsb_m3m3:float=100., 
-                        gamma_oil:float=0.86, 
-                        gamma_gas:float=0.6, 
-                        t_K:float=350
-                        )->float:
+                          t_K:float=350,
+                          pb_MPaa:float=10, 
+                          rsb_m3m3:float=100., 
+                          gamma_oil:float=0.86, 
+                          gamma_gas:float=0.6, 
+                          )->float:
     """
     газосодержание по Velarde McCain (1999) 
 
     :param p_MPaa: давление, MPa
+    :param t_K: температура, К
     :param pb_MPaa: давление насыщения, MPa
     :param rsb_m3m3: газосодержание при давлении насыщения, m3/m3
     :param gamma_oil: удельная плотность нефти
     :param gamma_gas: удельная плотность газа
-    :param t_K: температура, К
     :return: газосодержание при заданном давлении и температуре, m3/m3
 
     ref1 "Correlation of Black Oil Properties at Pressures Below Bubblepoint Pressure—A New Approach",
@@ -244,11 +248,11 @@ def _unf_rs_Velarde_m3m3_(p_MPaa:float=1,
 
 
 def unf_rs_Velarde_m3m3(p_MPaa:float=1, 
+                        t_K:float=350,
                         pb_MPaa:float=10, 
                         rsb_m3m3:float=100., 
                         gamma_oil:float=0.86, 
                         gamma_gas:float=0.6, 
-                        t_K:float=350
                         )->float:
     """
     газосодержание по Velarde McCain (1999) 
@@ -300,18 +304,18 @@ def unf_rs_Velarde_m3m3(p_MPaa:float=1,
 
 
 def unf_rsb_Mccain_m3m3(rsp_m3m3:float=10, 
-                        gamma_oil:float=0.86, 
                         psp_MPaa:float=0.0, 
-                        tsp_K:float=0.0
+                        tsp_K:float=0.0,
+                        gamma_oil:float=0.86, 
                         )->float:
     """
         Solution Gas-oil ratio at bubble point pressure calculation according to McCain (2002) correlation
     taking into account the gas losses at separator and stock tank
 
     :param rsp_m3m3: separator producing gas-oil ratio, m3m3
-    :param gamma_oil: specific oil density(by water)
     :param psp_MPaa: pressure in separator, MPaa
     :param tsp_K: temperature in separator, K
+    :param gamma_oil: specific oil density(by water)
     :return: solution gas-oil ratio at bubble point pressure, rsb in m3/m3
 
     часто условия в сепараторе неизвестны, может считать и без них по приблизительной формуле
@@ -343,27 +347,24 @@ def unf_rsb_Mccain_m3m3(rsp_m3m3:float=10,
 
     return scfstb_2_m3m3(rsb)
 
-
-
-
 """ 
 ====================================================================================================
-Корреляции расчета объемного коэффициента нефти (Oil Formation Volume Factor FVF)
+Расчет объемного коэффициента нефти (Oil Formation Volume Factor FVF)
 ====================================================================================================
 """
 
-def unf_bo_above_pb_m3m3(bob_m3m3:float=1.2, 
-                         compr_o_1MPa:float=3e-3, 
+def unf_bo_above_pb_m3m3(p_MPaa:float=1,
                          pb_MPaa:float=10, 
-                         p_MPaa:float=1
+                         bob_m3m3:float=1.2,
+                         compr_o_1MPa:float=3e-3, 
                          )->float:
     """
         Oil Formation Volume Factor according equation for pressure above bubble point pressure
 
+    :param p_MPaa: pressure, MPa
+    :param pb_MPaa: bubble point pressure, MPa
     :param bob_m3m3: formation volume factor at bubble point pressure, m3m3
     :param compr_o_1MPa: weighted-average oil compressibility from bubblepoint pressure to a higher pressure of interest,1/MPa
-    :param pb_MPaa: bubble point pressure, MPa
-    :param p_MPaa: pressure, MPa
     :return: formation volume factor bo,m3m3
 
     ref1 book Mccain_w_d_spivey_j_p_lenn_c_p_petroleum_reservoir_fluid,third edition, 2011
@@ -382,16 +383,16 @@ def unf_bo_above_pb_m3m3(bob_m3m3:float=1.2,
 
 
 def unf_bo_below_pb_m3m3(rho_oil_st_kgm3:float=820, 
-                         rs_m3m3:float=100, 
                          rho_oil_insitu_kgm3:float=700, 
+                         rs_m3m3:float=100, 
                          gamma_gas:float=0.8
                          )->float:
     """
         Oil Formation Volume Factor according McCain correlation for pressure below bubble point pressure
 
     :param rho_oil_st_kgm3: density of stock-tank oil, kgm3
-    :param rs_m3m3: solution gas-oil ratio, m3m3
     :param rho_oil_insitu_kgm3: Oil density at reservoir conditions, kgm3
+    :param rs_m3m3: solution gas-oil ratio, m3m3
     :param gamma_gas: specific gas  density(by air)
     :return: formation volume factor bo, m3m3
 
@@ -402,17 +403,18 @@ def unf_bo_below_pb_m3m3(rho_oil_st_kgm3:float=820,
     return bo
 
 
-def unf_bo_saturated_Standing_m3m3(rs_m3m3:float=100, 
-                                   gamma_gas:float=0.8, 
+def unf_bo_saturated_Standing_m3m3(t_K:float=300,
+                                   rs_m3m3:float=100,
                                    gamma_oil:float=0.86, 
-                                   t_K:float=300)->float:
+                                   gamma_gas:float=0.8 
+                                   )->float:
     """
         Oil Formation Volume Factor according Standing equation at bubble point pressure
 
-    :param rs_m3m3: solution gas-oil ratio, m3m3
-    :param gamma_gas: specific gas density (by air)
-    :param gamma_oil: specific oil density (by water)
     :param t_K: temperature, K
+    :param rs_m3m3: solution gas-oil ratio, m3m3
+    :param gamma_oil: specific oil density (by water)
+    :param gamma_gas: specific gas density (by air)
     :return: formation volume factor at bubble point pressure bo,m3m3
 
     ref1 Volumetric and phase behavior of oil field hydrocarbon systems / M.B. Standing Standing, M. B. 1981
@@ -423,7 +425,11 @@ def unf_bo_saturated_Standing_m3m3(rs_m3m3:float=100,
     return 0.972 + 1.47e-4 * (rs_scfstb * (gamma_gas / gamma_oil) ** 0.5 + 1.25 * t_F) ** 1.175
 
 
-def unf_bo_saturated_Glaso_m3m3(rs_m3m3, t_K, gamma_oil, gamma_gas):
+def unf_bo_saturated_Glaso_m3m3(t_K:float, 
+                                rs_m3m3:float,
+                                gamma_oil:float, 
+                                gamma_gas:float
+                                )->float:
     """
         Glaso correlation(1980) for formation volume factor at bubble point pressure
 
@@ -443,7 +449,12 @@ def unf_bo_saturated_Glaso_m3m3(rs_m3m3, t_K, gamma_oil, gamma_gas):
     return bob
 
 
-def unf_bo_below_Glaso_m3m3(rs_m3m3, t_K, gamma_oil, gamma_gas, p_MPaa):
+def unf_bo_below_Glaso_m3m3(p_MPaa:float, 
+                            t_K:float, 
+                            rs_m3m3:float,
+                            gamma_oil:float, 
+                            gamma_gas:float 
+                            )->float:
     """
         Glaso correlation(1980) for total formation volume factor below bubble point pressure
 
@@ -467,18 +478,18 @@ def unf_bo_below_Glaso_m3m3(rs_m3m3, t_K, gamma_oil, gamma_gas, p_MPaa):
 
 """ 
 ====================================================================================================
-Корреляции расчета плотности нефти
+Расчет плотности нефти
 ====================================================================================================
 """
 
-def unf_density_oil_Mccain(p_MPaa:float=1, 
-                           pb_MPaa:float=10, 
+def unf_density_oil_Mccain(p_MPaa:float=1,
+                           t_K:float=300,  
+                           pb_MPaa:float=10,
+                           rs_m3m3:float=10,  
                            co_1MPa:float=3e-3, 
-                           rs_m3m3:float=10, 
-                           gamma_gas:float=0.86, 
-                           t_K:float=300, 
                            gamma_oil:float=0.86, 
-                           gamma_gassp:float = 0
+                           gamma_gas:float=0.86, 
+                           gamma_gassp:float = 0,
                            )->float:
     """
         Oil density according Standing, M.B., 1977; Witte, T.W., Jr., 1987; and McCain, W.D., Jr. and Hill, N.C.,
@@ -528,12 +539,12 @@ def unf_density_oil_Mccain(p_MPaa:float=1,
 
 
 def unf_density_oil_Standing(p_MPaa:float=1, 
-                             pb_MPaa:float=10, 
-                             co_1MPa:float=3e-3, 
                              rs_m3m3:float=10, 
+                             pb_MPaa:float=10, 
                              bo_m3m3:float=1.1, 
-                             gamma_gas:float=0.8, 
-                             gamma_oil:float=0.86
+                             co_1MPa:float=3e-3,
+                             gamma_oil:float=0.86, 
+                             gamma_gas:float=0.8
                              )->float:
     """
         Oil density according Standing correlation.
@@ -556,14 +567,14 @@ def unf_density_oil_Standing(p_MPaa:float=1,
 
 """ 
 ====================================================================================================
-Корреляции расчета сжимаемости нефти
+Расчет сжимаемости нефти
 ====================================================================================================
 """
 def unf_compressibility_saturated_oil_McCain_1Mpa(p_MPa:float=1, 
-                                                  pb_MPa:float=10, 
                                                   t_K:float=300, 
-                                                  gamma_oil:float=0.86, 
-                                                  rsb_m3m3:float=100
+                                                  pb_MPa:float=10, 
+                                                  rsb_m3m3:float=100, 
+                                                  gamma_oil:float=0.86
                                                   )->float:
     """
         Oil compressibility below bubble point (saturated oil)
@@ -592,10 +603,10 @@ def unf_compressibility_saturated_oil_McCain_1Mpa(p_MPa:float=1,
     #TODO в тесте большое расхожнение, надо бы сравнить с vba и разобраться
 
 
-def unf_compressibility_oil_VB_1Mpa(rs_m3m3:float, 
+def unf_compressibility_oil_VB_1Mpa(p_MPaa:float, 
                                     t_K:float, 
-                                    gamma_oil:float, 
-                                    p_MPaa:float, 
+                                    rs_m3m3:float=100,
+                                    gamma_oil:float=0.86, 
                                     gamma_gas:float=0.6
                                     )->float: # TODO above bubble point!!
     """
@@ -624,10 +635,11 @@ def unf_compressibility_oil_VB_1Mpa(rs_m3m3:float,
                     )
 
 
-def unf_compessibility_oil_VB_1MPa_vba(rsb_m3m3:float, 
-                                       t_K:float, 
+def _unf_compessibility_oil_VB_1MPa_vba_(t_K:float, 
+                                       rsb_m3m3:float,
                                        gamma_oil:float, 
-                                       gamma_gas:float):
+                                       gamma_gas:float,
+                                       )->float:
     co_1atm = (28.1 * rsb_m3m3 + 30.6 * t_K - 1180 * gamma_gas + 1784 / gamma_oil - 10910)
     return 1/atm_2_bar(1/co_1atm)/10  #*))) **когда не дружишь с математикой ***когда слишком много времени потратил на uniflocpy
     #TODO на сравнить с реализацией не vba и понять, что оставить
@@ -635,15 +647,15 @@ def unf_compessibility_oil_VB_1MPa_vba(rsb_m3m3:float,
 
 """ 
 ====================================================================================================
-Корреляции расчета плотности газа на поверхности
+Расчет плотности газа на поверхности
 ====================================================================================================
 """
-def unf_gamma_gas_Mccain(rsp_m3m3:float, 
-                         rst_m3m3:float, 
-                         gamma_gassp:float=0.8, 
+def unf_gamma_gas_Mccain(psp_MPaa:float, 
+                         tsp_K:float,
+                         rsp_m3m3:float, 
+                         rst_m3m3:float,  
                          gamma_oil:float=0.86, 
-                         psp_MPaa:float=0, 
-                         tsp_K:float=0
+                         gamma_gassp:float=0.8,
                          )->float:
     """
         Correlation for weighted-average specific gravities of surface gases
@@ -696,8 +708,8 @@ def unf_gamma_gas_Mccain(rsp_m3m3:float,
 
 
 def unf_McCain_specificgravity(p_MPaa:float, 
-                               rsb_m3m3:float, 
                                t_K:float, 
+                               rsb_m3m3:float, 
                                gamma_oil:float, 
                                gamma_gassp:float
                                )->float:
@@ -723,13 +735,13 @@ def unf_McCain_specificgravity(p_MPaa:float,
 
 """ 
 ====================================================================================================
-Корреляции расчета вязкости нефти
+Расчет вязкости нефти
 ====================================================================================================
 """
 
 
-def unf_deadoilviscosity_Beggs_cP(gamma_oil:float, 
-                                  t_K:float
+def unf_viscosity_deadoil_Beggs_cP(t_K:float,
+                                   gamma_oil:float, 
                                   )->float:
     """
         Correlation for dead oil viscosity
@@ -748,9 +760,9 @@ def unf_deadoilviscosity_Beggs_cP(gamma_oil:float,
     return 10 ** c - 1
 
 
-def unf_deadoilviscosity_BeggsRobinson_cP(gamma_oil:float, 
-                                          t_K:float
-                                          )->float:
+def unf_viscosity_deadoil_BeggsRobinson_cP(t_K:float,
+                                           gamma_oil:float, 
+                                           )->float:
     """
     
     :param gamma_oil: specific oil density (by water)
@@ -767,9 +779,9 @@ def unf_deadoilviscosity_BeggsRobinson_cP(gamma_oil:float,
     return 10 ** x - 1
 
 
-def unf_deadoilviscosity_Standing(gamma_oil:float, 
-                                  t_K:float
-                                  )->float:
+def unf_viscosity_deadoil_Standing(t_K:float,
+                                   gamma_oil:float, 
+                                   )->float:
     """
     
     :param gamma_oil: specific oil density (by water)
@@ -791,14 +803,14 @@ def unf_deadoilviscosity_Standing(gamma_oil:float,
 
     # из vba  unf_pvt_viscosity_dead_oil_Standing_cP
 
+    api = gamma_oil_2_api(gamma_oil)
+    return (0.32 + 1.8e7 / api ** 4.53) * (360 / (K_2_F(t_K) + 200)) ** (10 ** (0.43 + 8.33 / api))
 
-    return (0.32 + 1.8e7 / gamma_oil_2_api(gamma_oil) ** 4.53) * (360 / (K_2_F(t_K) + 200)) ** (10 ** (0.43 + 8.33 /  gamma_oil_2_api(gamma_oil)))
 
-
-def unf_viscosity_oil_Standing_cP(rs_m3m3:float, 
-                                  mu_oil_dead_cP:float, 
-                                  p_MPa:float,  
-                                  pb_MPa:float
+def unf_viscosity_oil_Standing_cP(p_MPa:float,  
+                                  rs_m3m3:float,
+                                  pb_MPa:float, 
+                                  mu_oil_dead_cP:float
                                   )->float:
 
     a = 5.6148 * rs_m3m3 * (0.1235 * 10 ** (-5) * rs_m3m3 - 0.00074)
@@ -812,7 +824,7 @@ def unf_viscosity_oil_Standing_cP(rs_m3m3:float,
                     )
 
 
-def unf_saturatedoilviscosity_Beggs_cP(mu_oil_dead_cP:float, 
+def unf_viscosity_saturatedoil_Beggs_cP(mu_oil_dead_cP:float, 
                                        rs_m3m3:float
                                        )->float:
     """
@@ -832,16 +844,16 @@ def unf_saturatedoilviscosity_Beggs_cP(mu_oil_dead_cP:float,
     return a * mu_oil_dead_cP ** b
 
 
-def unf_undersaturatedoilviscosity_VB_cP(p_MPaa:float, 
-                                         pb_MPaa:float, 
-                                         bubblepointviscosity_cP:float
-                                         )->float:
+def unf_viscosity_undersaturatedoil_VB_cP(p_MPaa:float, 
+                                          pb_MPaa:float, 
+                                          mu_oilb_cP:float
+                                          )->float:
     """
         Viscosity correlation for pressure above bubble point
 
     :param p_MPaa: pressure, MPaa
     :param pb_MPaa: bubble point pressure, MPaa
-    :param bubblepointviscosity_cP: oil viscosity at bubble point pressure, cP
+    :param mu_oilb_cP: oil viscosity at bubble point pressure, cP
     :return: oil viscosity,cP
 
     ref2 Vazquez, M. and Beggs, H.D. 1980. Correlations for Fluid Physical Property Prediction.
@@ -851,14 +863,14 @@ def unf_undersaturatedoilviscosity_VB_cP(p_MPaa:float,
     p_psia = MPa_2_psi(p_MPaa)
     pb_psia = MPa_2_psi(pb_MPaa)
     m = 2.6 * p_psia ** 1.187 * np.exp(-11.513 - 8.98e-5 * p_psia)
-    viscosity_cP = bubblepointviscosity_cP * (p_psia / pb_psia) ** m
+    viscosity_cP = mu_oilb_cP * (p_psia / pb_psia) ** m
     return viscosity_cP
 
 
-def unf_oil_viscosity_Beggs_VB_cP(mu_oil_dead_cP:float, 
+def unf_viscosity_oil_Beggs_VB_cP(p_MPaa:float, 
                                   rs_m3m3:float, 
-                                  p_MPaa:float, 
-                                  pb_MPaa:float
+                                  pb_MPaa:float,
+                                  mu_oil_dead_cP:float, 
                                   )->float:
     """
         Function for calculating the viscosity at any pressure
@@ -870,14 +882,14 @@ def unf_oil_viscosity_Beggs_VB_cP(mu_oil_dead_cP:float,
     :return: oil viscosity,cP
     """
     
-    saturatedviscosity_cP = unf_saturatedoilviscosity_Beggs_cP(mu_oil_dead_cP, rs_m3m3)
+    saturatedviscosity_cP = unf_viscosity_saturatedoil_Beggs_cP(mu_oil_dead_cP, rs_m3m3)
     return np.where(p_MPaa <= pb_MPaa, 
                     saturatedviscosity_cP,
-                    unf_undersaturatedoilviscosity_VB_cP(p_MPaa, pb_MPaa, saturatedviscosity_cP)
+                    unf_viscosity_undersaturatedoil_VB_cP(p_MPaa, pb_MPaa, saturatedviscosity_cP)
                     )
 
 
-def unf_undersaturatedoilviscosity_Petrovsky_cP(p_MPaa:float, 
+def unf_viscosity_undersaturatedoil_Petrosky_cP(p_MPaa:float, 
                                                 pb_MPaa:float, 
                                                 mu_oilb_cP:float
                                                 )->float:
@@ -986,3 +998,22 @@ def unf_thermal_conductivity_oil_Cragoe_WmK(gamma_oil:float,
     Petroleum science and technology. – 2007. – Т. 25. – №. 4. – С. 415-425.   """
     t_K = C_2_K(t_C)
     return (0.118 /(gamma_oil * 1000) * (1 - 0.00054 * (t_K - 273)) * 10 ** 3)
+
+
+
+    # uPVT свойства для сжимаемости нефти(требует немного свойств газа)
+
+"""
+def unf_weightedcompressibility_oil_Mccain_1MPa_greater(gamma_oil, gamma_gas, pb_MPa, p_MPa, rsb_m3m3, tres_K, gamma_gassp = 0):
+
+    pass
+
+
+def unf_compressibility_oil_Mccain_1MPa_greater(gamma_oil, gamma_gas, pb_MPa, p_MPa, rsb_m3m3, tres_K, gamma_gassp = 0):
+
+    pass
+
+
+def unf_compressibility_oil_Mccain_1MPa_lower():
+    pass
+"""

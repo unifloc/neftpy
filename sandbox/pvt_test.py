@@ -1,7 +1,7 @@
 # тестируем функции для расчета PVT 
 
 import neftpy.upvt_oil as pvto
-import neftpy.upvt_np_vect as pvtovect
+import neftpy.upvt_np_vect as pvt_vect
 
 import numpy as np
 
@@ -12,8 +12,8 @@ gamma_gas = 0.6
 t_K = 350
 res = np.array([ 0.44434683,  1.67824568,  2.98339278, 20.1702107 , 35.85628831])
 
-print(pvtovect.unf_pb_Valko_MPaa(rsb_m3m3, gamma_oil, gamma_gas, t_K))
+print(pvt_vect.unf_pb_Valko_MPaa(rsb_m3m3, gamma_oil, gamma_gas, t_K))
 print(res)
 
-print(np.allclose(pvtovect.unf_pb_Standing_MPaa(rsb_m3m3, gamma_oil, gamma_gas, t_K), 
+print(np.allclose(pvt_vect.unf_pb_Standing_MPaa(rsb_m3m3, gamma_oil, gamma_gas, t_K), 
                         res, rtol=1e-05))
