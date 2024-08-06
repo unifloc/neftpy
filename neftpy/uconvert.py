@@ -99,6 +99,13 @@ def atm_2_Pa(value):
     """
     return value * const.atm
 
+def atm_2_MPa(value):
+    """
+    converts pressure in atm (standard atmosphere) to MPa
+    :param value: pressure value in atm
+    :return: pressure value in Pa
+    """
+    return value * const.atm / const.mega
 
 def Pa_2_atm(value):
     """
@@ -115,7 +122,7 @@ def at_2_Pa(value):
     :param value: pressure value in at (technical atmosphere)
     :return: pressure value in Pa
     """
-    return value * const_at
+    return value * AT
 
 
 def Pa_2_at(value):
@@ -124,7 +131,7 @@ def Pa_2_at(value):
     :param value: pressure value in Pa
     :return: pressure value in at (technical atmosphere)
     """
-    return value * const_at
+    return value / AT
 
 
 def bar_2_psi(value):
@@ -261,7 +268,7 @@ def K_2_R(value):
      :param value: temperature in K(Kelvins)
      :return: temperature in R(degrees Rankine)
      """
-    return const.convert_temperature(value, 'K', 'R')
+    return value * 9 / 5
 
 
 def R_2_K(value):
@@ -270,7 +277,7 @@ def R_2_K(value):
      :param value: temperature in R(degrees Rankine)
      :return: temperature in K(Kelvins)
      """
-    return const.convert_temperature(value, 'R', 'K')
+    return value * 5 / 9
 
 # length
 
@@ -564,5 +571,5 @@ def grad_2_rad(value):
     :param value: angle in grad
     :return: angle in rad
     """
-    return value * pi / 180
+    return value * PI / 180
 

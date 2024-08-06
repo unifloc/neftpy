@@ -132,32 +132,38 @@ unf_viscosity_saturatedoil_Beggs_cP = pvto.unf_viscosity_saturatedoil_Beggs_cP
 """
 
 
-unf_pseudocritical_temperature_K = pvtg.unf_pseudocritical_temperature_K
-
-
-unf_pseudocritical_pressure_MPa = pvtg.unf_pseudocritical_pressure_MPa
-
-unf_pseudocritical_temperature_Standing_K = pvtg.unf_pseudocritical_temperature_Standing_K
-unf_pseudocritical_pressure_Standing_MPa = pvtg.unf_pseudocritical_pressure_Standing_MPa
+unf_pseudocritical_McCain_p_MPa_t_K = pvtg.unf_pseudocritical_McCain_p_MPa_t_K 
+unf_pseudocritical_Standing_p_MPa_t_K = pvtg.unf_pseudocritical_Standing_p_MPa_t_K
+unf_pseudocritical_Sutton_p_MPa_t_K = pvtg.unf_pseudocritical_Sutton_p_MPa_t_K
 
 unf_zfactor_BrillBeggs = np.vectorize(pvtg.unf_zfactor_BrillBeggs)
-
 unf_zfactor_DAK = np.vectorize(pvtg.unf_zfactor_DAK)
-unf_zfactor_DAK_ppr = np.vectorize(pvtg.unf_zfactor_DAK_ppr)
 unf_zfactor_Kareem = np.vectorize(pvtg.unf_zfactor_Kareem)
 unf_zfactor_SK = np.vectorize(pvtg.unf_zfactor_SK)
+unf_zfactor = np.vectorize(pvtg.unf_zfactor)
+unf_dzdp = np.vectorize(pvtg.unf_dzdp)
+unf_dzdt = np.vectorize(pvtg.unf_dzdt)
 
 
-unf_compressibility_gas_Mattar_1MPa = np.vectorize(pvtg.unf_compressibility_gas_Mattar_1MPa)
+unf_mu_gas_cP = pvtg.unf_mu_gas_cP
+unf_mu_gas_Lee_z_cP = pvtg.unf_mu_gas_Lee_z_cP
+unf_mu_gas_Lee_z_cP_ = pvtg.unf_mu_gas_Lee_z_cP_
+unf_mu_gas_Lee_rho_cP = pvtg.unf_mu_gas_Lee_rho_cP
 
-unf_gasviscosity_Lee_cP = pvtg.unf_gasviscosity_Lee_cP
+unf_bg_gas_z_m3m3 = pvtg.unf_bg_gas_z_m3m3
+unf_bg_gas_m3m3 = pvtg.unf_bg_gas_m3m3
 
-unf_gas_fvf_m3m3 = pvtg.unf_gas_fvf_m3m3
-
-unf_gas_density_kgm3 = pvtg.unf_gas_density_kgm3
+unf_rho_gas_z_kgm3 = pvtg.unf_rho_gas_z_kgm3
+unf_rho_gas_kgm3 = pvtg.unf_rho_gas_kgm3
+unf_rho_gas_bg_kgm3 = pvtg.unf_rho_gas_bg_kgm3
 
 
 unf_heat_capacity_gas_Mahmood_Moshfeghian_JkgC = pvtg.unf_heat_capacity_gas_Mahmood_Moshfeghian_JkgC
 
-
+unf_gas_ideal_heat_capacity_ratio = pvtg.unf_gas_ideal_heat_capacity_ratio
 unf_thermal_conductivity_gas_methane_WmK = pvtg.unf_thermal_conductivity_gas_methane_WmK
+
+unf_cv_gas_JkgC = np.vectorize(pvtg.unf_cv_gas_JkgC)
+unf_cp_gas_JkgC = pvtg.unf_cp_gas_JkgC
+unf_gas_thermal_expansion_1K = np.vectorize(pvtg.unf_gas_thermal_expansion_1K)
+unf_gas_isotermal_compressibility_1MPa = np.vectorize(pvtg.unf_gas_isotermal_compressibility_1MPa)

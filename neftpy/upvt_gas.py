@@ -12,38 +12,42 @@ import json
 
 # uPVT свойства для газа
 
-def unf_pseudocritical_temperature_K(gamma_gas:float, 
-                                     y_h2s:float=0.0, 
-                                     y_co2:float=0.0, 
-                                     y_n2:float=0.0,
-                                     )->float:
+""" 
+====================================================================================================
+Критические свойства газа
+====================================================================================================
+"""
+
+def unf_pseudocritical_McCain_p_MPa_t_K(gamma_gas:float, 
+                                 y_h2s:float=0.0, 
+                                 y_co2:float=0.0, 
+                                 y_n2:float=0.0,
+                                 )->float:
     """
-        Correlation for pseudocritical temperature taking into account the presense of non-hydrocarbon gases
+    Correlation for pseudocritical pressure and temperature 
+    taking into account the presense of non-hydrocarbon gases
+    
+    Расчет псевдо критического давления и температуры 
+    с учетом наличия не углеводородных примесей в газе
 
     :param gamma_gas: specific gas density (by air)
     :param y_h2s: mole fraction of the hydrogen sulfide
     :param y_co2: mole fraction of the carbon dioxide
     :param y_n2: mole fraction of the nitrogen
-    :return: pseudocritical temperature, K
+    :return: tuple with pseudocritical pressure and temperature, K
 
     ref 1 Piper, L.D., McCain, W.D., Jr., and Corredor, J.H. “Compressibility Factors for
     Naturally Occurring Petroleum Gases.” Gas Reservoir Engineering. Reprint Series. Richardson,
     TX: SPE. Vol. 52 (1999) 186–200
     """
-    """
-    tc_h2s_K,            critical temperature for hydrogen sulfide, K
-    tc_co2_K,            critical temperature for carbon dioxide, K
-    tc_n2_K,             critical temperature for nitrogen, K
-    pc_h2s_MPaa,         critical pressure for hydrogen sulfide, MPaa
-    pc_co2_MPaa,         critical pressure for carbon dioxide, MPaa
-    pc_n2_MPaa,          critical pressure for nitrogen, MPaa
-    """
-    tc_h2s_R = K_2_R(373.6)
-    tc_co2_R = K_2_R(304.13)
-    tc_n2_R = K_2_R(126.25)
-    pc_h2s_psia = MPa_2_psi(9.007)
-    pc_co2_psia = MPa_2_psi(7.375)
-    pc_n2_psia = MPa_2_psi(3.4)
+
+    tc_h2s_R = K_2_R(373.6)         # critical temperature for hydrogen sulfide, K->R
+    tc_co2_R = K_2_R(304.13)        # critical temperature for carbon dioxide, K->R
+    tc_n2_R = K_2_R(126.25)         # critical temperature for nitrogen, K->R
+    pc_h2s_psia = MPa_2_psi(9.007)  # critical pressure for hydrogen sulfide, MPaa->psi
+    pc_co2_psia = MPa_2_psi(7.375)  # critical pressure for carbon dioxide, MPaa->psi
+    pc_n2_psia = MPa_2_psi(3.4)     # critical pressure for nitrogen, MPaa->psi
+
     J = 1.1582e-1 - \
         4.5820e-1 * y_h2s * (tc_h2s_R / pc_h2s_psia) - \
         9.0348e-1 * y_co2 * (tc_co2_R / pc_co2_psia) - \
@@ -58,83 +62,52 @@ def unf_pseudocritical_temperature_K(gamma_gas:float,
         3.2191 * gamma_gas ** 2
     tpc_R = K ** 2 / J
     tpc_K = R_2_K(tpc_R)
-    return tpc_K
-
-
-def unf_pseudocritical_pressure_MPa(gamma_gas:float, 
-                                    y_h2s:float=0.0, 
-                                    y_co2:float=0.0, 
-                                    y_n2:float=0.0
-                                    )->float:
-    """
-        Correlation for pseudocritical pressure taking into account the presense of non-hydrocarbon gases
-
-    :param gamma_gas: specific gas density (by air)
-    :param y_h2s: mole fraction of the hydrogen sulfide
-    :param y_co2: mole fraction of the carbon dioxide
-    :param y_n2: mole fraction of the nitrogen
-    :return: pseudocritical pressure, MPa
-
-    ref 1 Piper, L.D., McCain, W.D., Jr., and Corredor, J.H. “Compressibility Factors for
-    Naturally Occurring Petroleum Gases.” Gas Reservoir Engineering. Reprint Series. Richardson,
-    TX: SPE. Vol. 52 (1999) 186–200
-    """
-    """          
-    tc_h2s_K,            critical temperature for hydrogen sulfide, K
-    tc_co2_K,            critical temperature for carbon dioxide, K
-    tc_n2_K,             critical temperature for nitrogen, K
-    pc_h2s_MPaa,         critical pressure for hydrogen sulfide, MPaa
-    pc_co2_MPaa,         critical pressure for carbon dioxide, MPaa
-    pc_n2_MPaa,          critical pressure for nitrogen, MPaa               
-    """
-    tc_h2s_R = K_2_R(373.6)
-    tc_co2_R = K_2_R(304.13)
-    tc_n2_R = K_2_R(126.25)
-    pc_h2s_psia = MPa_2_psi(9.007)
-    pc_co2_psia = MPa_2_psi(7.375)
-    pc_n2_psia = MPa_2_psi(3.4)
-
-    J = 1.1582e-1 - \
-        4.5820e-1 * y_h2s * (tc_h2s_R / pc_h2s_psia) - \
-        9.0348e-1 * y_co2 * (tc_co2_R / pc_co2_psia) - \
-        6.6026e-1 * y_n2 * (tc_n2_R / pc_n2_psia) + \
-        7.0729e-1 * gamma_gas - \
-        9.9397e-2 * gamma_gas ** 2
-    K = 3.8216 - \
-        6.5340e-2 * y_h2s * (tc_h2s_R / pc_h2s_psia) - \
-        4.2113e-1 * y_co2 * (tc_co2_R / pc_co2_psia) - \
-        9.1249e-1 * y_n2 * (tc_n2_R / pc_n2_psia) + \
-        1.7438 * 10 * gamma_gas - \
-        3.2191 * gamma_gas ** 2
-    tpc_R = K ** 2 / J
+    
     ppc_psia = tpc_R / J
     ppc_MPa = psi_2_MPa(ppc_psia)
-    return ppc_MPa
+    return (ppc_MPa, tpc_K)
 
 
-def unf_pseudocritical_temperature_Standing_K(gamma_gas:float)->float:  # VBA
-    return 93.3 + 180 * gamma_gas - 6.94 * gamma_gas ** 2
+def unf_pseudocritical_Standing_p_MPa_t_K(gamma_gas:float)->float:  # VBA
+    tpc = 93.3 + 180 * gamma_gas - 6.94 * gamma_gas ** 2
+    ppc = 4.6 + 0.1 * gamma_gas - 0.258 * gamma_gas ** 2
+    return (ppc, tpc)
 
 
-def unf_pseudocritical_pressure_Standing_MPa(gamma_gas:float)->float:  # VBA
-    return 4.6 + 0.1 * gamma_gas - 0.258 * gamma_gas ** 2
+def unf_pseudocritical_Sutton_p_MPa_t_K(gamma_gas:float)->float:  # VBA
+    """
+    https://petrowiki.spe.org/Real_gases
+    """
+    tpc = 169.2 + 349.5 * gamma_gas - 74.0 * gamma_gas ** 2
+    tpc = R_2_K(tpc)
+    ppc = 756.8 - 131.07 * gamma_gas - 3.6 * gamma_gas ** 2
+    ppc = psi_2_MPa(ppc)
+    return (ppc, tpc)
 
+
+""" 
+====================================================================================================
+Расчет z фактора
+====================================================================================================
+"""
 
 def unf_zfactor_BrillBeggs(ppr:float, 
                            tpr:float, 
                            safe:bool=True
                            )->float:
     """
-        Correlation for z-factor according Beggs & Brill correlation (1977)
+    Correlation for z-factor according Beggs & Brill correlation (1977)
 
-    используется для приближения функции дранчука
+    Расчет z фактора по корреляции Беггса Брилла (1977) (корреляция Standing из Pipesim)
+    используется для приближения функции Дранчука (Стендинга Катцв)
+    Быстрый явный расчет, но плох по краям
+    Можно использовать при tpr<=2 и ppr<=4
+    при tpr <== 1.5 ppr<=10
 
     :param ppr: preudoreduced pressure
     :param tpr: pseudoreduced temperature
+    :param safe: флаг ограничений на температуру для повышения устойчивости расчета
     :return: z-factor
-
-    Можно использовать при tpr<=2 и ppr<=4
-    при tpr <== 1.5 ppr<=10
     """
 
     # для корреляции BrillBeggs крайне не рекомендуется включать safe=False
@@ -151,41 +124,17 @@ def unf_zfactor_BrillBeggs(ppr:float,
     z = a + (1 - a) * np.exp(-e) + f * ppr ** g
     return z
 
-
-def unf_zfactor_DAK(p_MPaa:float, 
-                    t_K:float, 
-                    ppc_MPa:float, 
-                    tpc_K:float, 
+def unf_zfactor_DAK(ppr:float, 
+                    tpr:float, 
                     safe:bool=True
                     )->float:
     """
-        Correlation for z-factor
-
-    :param p_MPaa: pressure, MPaa
-    :param t_K: temperature, K
-    :param ppc_MPa: pseudocritical pressure, MPa
-    :param tpc_K: pseudocritical temperature, K
-    :return: z-factor
-
-    range of applicability is (0.2<=ppr<30 and 1.0<tpr<=3.0) and also ppr < 1.0 for 0.7 < tpr < 1.0
-
-    ref 1 Dranchuk, P.M. and Abou-Kassem, J.H. “Calculation of Z Factors for Natural
-    Gases Using Equations of State.” Journal of Canadian Petroleum Technology. (July–September 1975) 34–36.
-
-    """
-
-    ppr = p_MPaa / ppc_MPa
-    tpr = t_K / tpc_K
-
-    return unf_zfactor_DAK_ppr(ppr, tpr, safe)
-
-
-def unf_zfactor_DAK_ppr(ppr:float, 
-                        tpr:float, 
-                        safe:bool=True
-                        )->float:
-    """
-        Correlation for z-factor
+    Correlation for z-factor
+    Расчет z фактора по методу Дранчука Абу Кассема
+    Использует приближение к графикам Стандинга Катца на основе решения уравнения состояния
+    Медленный расчет из за необходимости решения уравнения состояния (неявно)
+    Относительно точен.
+    С осторожностью можно использовать для температур ниже критической (safe=False)
 
     :param ppr: pseudoreduced pressure
     :param tpr: pseudoreduced temperature
@@ -225,19 +174,26 @@ def unf_zfactor_DAK_ppr(ppr:float,
     # возможно далее для унификации можно отказаться от расчета
     return solution
 
-
 def unf_zfactor_Kareem(ppr:float, 
                        tpr:float,
                        safe:bool=True
                        )->float:
     """
+    Correlation for z-factor
+    Расчет z фактора по корреляции Карима
+    Использует приближение к графикам Стандинга Катца с использованием явных функций
+    относительно быстрый
+
+    С осторожностью можно использовать для температур ниже критической (safe=False)
     based on  https://link.springer.com/article/10.1007/s13202-015-0209-3
     Kareem, L.A., Iwalewa, T.M. & Al-Marhoun, M.
     New explicit correlation for the compressibility factor of natural gas: linearized z-factor isotherms.
     J Petrol Explor Prod Technol 6, 481–492 (2016).
     https://doi.org/10.1007/s13202-015-0209-3
+
     :param ppr: pseudoreduced pressure
     :param tpr: pseudoreduced temperature
+    :param safe: если True то расчет ограничивается только tpr>1.05, что гарантирует корректность
     :return:
     """
 
@@ -285,174 +241,6 @@ def unf_zfactor_Kareem(ppr:float,
     z = DPpr * (1 + y + y ** 2 - y ** 3) / (DPpr + EE * y ** 2 - FF * y ** GG) / ((1 - y) ** 3)
 
     return z
-
-
-def unf_compressibility_gas_Mattar_1MPa(p_MPaa:float, 
-                                        t_K:float, 
-                                        ppc_MPa:float, 
-                                        tpc_K:float
-                                        )->float:
-    """
-        Correlation for gas compressibility
-
-    :param p_MPaa: pressure, MPaa
-    :param t_K: temperature, K
-    :param ppc_MPa: pseudocritical pressure, MPa
-    :param tpc_K: pseudocritical temperature, K
-    :return: gas compressibility, 1/MPa
-
-    ref 1 Mattar, L., Brar, G.S., and Aziz, K. 1975. Compressibility of Natural Gases.
-    J Can Pet Technol 14 (4): 77. PETSOC-75-04-08
-
-    """
-    #TODO надо разобраться с реализацией
-    ppr = p_MPaa / ppc_MPa
-    tpr = t_K / tpc_K
-    z0 = 1
-    ropr0 = 0.27 * (ppr / (z0 * tpr))
-
-    def f(variables):
-        z = variables[0]
-        ropr = variables[1]
-        func = np.zeros(2)
-        func[0] = 0.27 * (ppr / (z * tpr)) - ropr
-        func[1] = -z + 1 + \
-            (0.3265 - 1.0700 / tpr - 0.5339 / tpr ** 3 + 0.01569 / tpr ** 4 - 0.05165 / tpr ** 5) * ropr +\
-            (0.5475 - 0.7361 / tpr + 0.1844 / tpr ** 2) * ropr ** 2 - \
-            0.1056 * (-0.7361 / tpr + 0.1844 / tpr ** 2) * ropr ** 5 + \
-            0.6134 * (1 + 0.7210 * ropr ** 2) * (ropr ** 2 / tpr ** 3) * np.exp(-0.7210 * ropr ** 2)
-        return func
-    solution = np.array(opt.fsolve(f, np.array([z0, ropr0])))
-
-    z_derivative = 0.3265 - 1.0700 / tpr - 0.5339 / tpr ** 3 + 0.01569 / tpr ** 4 - 0.05165 / tpr ** 5 + \
-        2 * solution[1] * (0.5475 - 0.7361 / tpr + 0.1844 / tpr ** 2) - \
-        5 * 0.1056 * (-0.7361 / tpr + 0.1844 / tpr ** 2) * solution[1] ** 4 + \
-        2 * 0.6134 * solution[1] / tpr ** 3 * (1 + \
-                                               0.7210 * solution[1] ** 2 - \
-                                               0.7210 ** 2 * solution[1] ** 4) * np.exp(-0.7210 * solution[1] ** 2)
-    
-    cpr = 1 / solution[1] - 0.27 / (solution[0] ** 2 * tpr) * (z_derivative / (1 + solution[1] * z_derivative /
-                                                                               solution[0]))
-    cg = cpr / ppc_MPa
-    return cg
-
-
-def unf_gasviscosity_Lee_cP(p_MPaa:float, 
-                            t_K:float,
-                            z:float,
-                            gamma_gas:float,
-                            )->float:
-    """
-        Lee correlation for gas viscosity
-
-    :param t_K: temperature, K
-    :param p_MPaa: pressure, MPaa
-    :param z: z-factor
-    :param gamma_gas: specific gas density (by air)
-    :return: gas viscosity,cP
-
-    ref 1 Lee, A.L., Gonzalez, M.H., and Eakin, B.E. “The Viscosity of Natural Gases.” Journal
-    of Petroleum Technology. Vol. 18 (August 1966) 997–1,000.
-    """
-
-    t_R = K_2_R(t_K)
-    m = M_AIR_GMOL * gamma_gas  # Molar mass
-    a = ((9.379 + 0.01607 * m) * t_R ** 1.5)/(209.2 + 19.26 * m + t_R)
-    b = 3.448 + 986.4/t_R + 0.01009 * m
-    c = 2.447 - 0.2224 * b
-    ro_gas = p_MPaa * m/(z * t_K * 8.31)
-    gasviscosity_cP = 10**(-4) * a * np.exp(b * ro_gas**c)
-    return gasviscosity_cP
-
-
-def unf_gas_fvf_m3m3(p_MPaa:float, 
-                     t_K:float,
-                     z:float)->float:
-    """
-        Equation for gas FVF
-
-    :param t_K: temperature, K
-    :param p_MPaa: pressure, MPaa
-    :param z: z-factor
-    :return: formation volume factor for gas bg, m3/m3
-    """
-
-    bg = 101.33e-3 * t_K * z / (293.15 * p_MPaa) # тут от нормальный условий по температуре
-    return bg
-
-
-def unf_fvf_gas_vba_m3m3(P_MPa:float,
-                         t_K:float, 
-                         z:float 
-                         )->float:
-    return 0.00034722 * t_K * z / P_MPa  # от какой температуры?
-
-
-def unf_gas_density_kgm3(p_MPaa:float, 
-                         t_K:float, 
-                         gamma_gas:float, 
-                         z:float
-                         )->float:
-    """
-        Equation for gas density from state equation
-
-    :param t_K: temperature
-    :param p_MPaa: pressure
-    :param gamma_gas: specific gas density by air
-    :param z: z-factor
-    :return: gas density
-    """
-    m = gamma_gas * 0.029
-    p_Pa = 10 ** 6 * p_MPaa
-    rho_gas = p_Pa * m / (z * 8.31 * t_K)
-    return rho_gas
-
-
-def unf_gas_density_VBA_kgm3(gamma_gas:float, 
-                             bg_m3m3:float
-                             )->float:
-    return gamma_gas * RHO_AIR_kgm3 / bg_m3m3
-
-
-def unf_heat_capacity_gas_Mahmood_Moshfeghian_JkgC(p_MPaa:float, 
-                                                   t_K:float, 
-                                                   gamma_gas:float
-                                                   )->float:
-    """
-        Gas heat capacity by Mahmood Moshfeghian for 0.1 to 20 MPa
-    should be noted that the concept of heat capacity is valid only for the single phase region.
-
-    :param p_MPaa: pressure, MPaa
-    :param t_K: temperature, K
-    :param gamma_gas: specific gas density by air
-    :return: gas heat capacity in JkgC = JkgK
-
-    ref1 https://www.jmcampbell.com/tip-of-the-month/2009/07/
-    variation-of-natural-gas-heat-capacity-with-temperature-pressure-and-relative-density/
-    """
-    t_C = K_2_C(t_K)
-    a = 0.9
-    b = 1.014
-    c = -0.7
-    d = 2.170
-    e = 1.015
-    f = 0.0214
-    return ((a * (b**t_C) * (t_C**c) + d * (e**p_MPaa) * (p_MPaa**f)) * ((gamma_gas / 0.60) ** 0.025)) * 1000
-
-
-def unf_thermal_conductivity_gas_methane_WmK(t_C:float)->float: # TODO заменить
-    """
-        Теплопроводность метана
-
-    :param t_c: температура в С
-    :return: теплопроводность в Вт / м К
-
-    Данная функкия является линейным приближением табличных значений при 1 бар
-    требует корректировки, является временной затычкой, взята от безысходности
-    """
-    return (42.1 + (42.1 - 33.1)/(80-18)*(t_C - 80))/1000
-
-
 
 def _load_StandingKatz_curve_():
     """
@@ -628,16 +416,523 @@ def _load_StandingKatz_curve_():
     except Exception as e:
         print(e)
 
-
 def unf_zfactor_SK(ppr:float, 
                    tpr:float,
                    safe:bool=True
                    )->float:
+    """
+    Correlation for z-factor
+    Расчет z фактора по графикам Стандинга Катца на основе табулированных данных
+    Очень быстрый.
+    Относительно точен в зоне определения графиков.
+    при safe=False может экстраполировать за границы и сильно врать для низких температур
+
+    :param ppr: pseudoreduced pressure
+    :param tpr: pseudoreduced temperature
+    :param safe: если True то расчет ограничивается только tpr>1.05, что гарантирует корректность
+    :return:
+    """
     zSk = StandingKatz_curve['interp']
     if safe and tpr < 1.05:
         tpr = 1.05
-    return zSk((ppr, tpr))
+    return zSk((ppr, tpr), method='linear')
+
+def unf_zfactor(p_MPaa:float, 
+                t_K:float, 
+                gamma_gas:float,
+                method_z:str='Standing_Katz',
+                method_crit:str='Sutton',
+                y_h2s:float=0.0, 
+                y_co2:float=0.0, 
+                y_n2:float=0.0,
+                safe_z:bool=True
+                )->float:
+    """
+    General function for z-factor estimation by correlation
+    Обобщающая функция расчетр z фактора с возможность выбора метода расчета z фактора
+    и метода расчета критических параметров газа
+
+    :param p_MPaa: Давление газа, МПа
+    :param t_K: Температура газа, К
+    :param gamma_gas: удельная плотность газа по воздуху
+    :param method_z: метод расчета z фактора (Standing_Katz, DAK, Kareem, BrillBeggs)
+    :param method_crit: метод расчета критического давления и температуры (Standing, McCain)
+    :param y_h2s: мольная доля H2S
+    :param y_co2: мольная доля CO2
+    :param y_n2: мольная доля N2
+    :param safe: если True то расчет ограничивается только tpr>1.05, что гарантирует корректность
+    :return:
+    """
+    # оценим псевдо критичесие давление и температуру
+    if method_crit=='Standing':
+        (ppc_MPa, tpc_K) = unf_pseudocritical_Standing_p_MPa_t_K(gamma_gas=gamma_gas)
+    elif method_crit=='Sutton':
+        (ppc_MPa, tpc_K) = unf_pseudocritical_Sutton_p_MPa_t_K(gamma_gas=gamma_gas)
+    else:
+        (ppc_MPa,tpc_K) = unf_pseudocritical_McCain_p_MPa_t_K(gamma_gas=gamma_gas,y_h2s=y_h2s,y_co2=y_co2,y_n2=y_n2)
+
+    # оценим приведенные давление и температуру
+    ppr = p_MPaa / ppc_MPa
+    tpr = t_K / tpc_K
+
+    #оценим величину z фактора
+    if method_z=='Standing_Katz':
+        z = unf_zfactor_SK(ppr=ppr, tpr=tpr, safe=safe_z)
+    elif method_z=='DAK':
+        z = unf_zfactor_DAK(ppr=ppr, tpr=tpr, safe=safe_z)
+    elif method_z=='Kareem':
+        z = unf_zfactor_Kareem(ppr=ppr, tpr=tpr, safe=safe_z)
+    elif method_z=='BrillBeggs':
+        z = unf_zfactor_BrillBeggs(ppr=ppr, tpr=tpr, safe=safe_z)
+    
+    return z
+
+def unf_dzdp(p_MPaa:float, 
+                t_K:float, 
+                gamma_gas:float,
+                method_z:str='Standing_Katz',
+                method_crit:str='Sutton',
+                y_h2s:float=0.0, 
+                y_co2:float=0.0, 
+                y_n2:float=0.0,
+                safe_z:bool=True
+                )->float:
+    """
+    расчет производной от z фактора по давлению
+    """
+    
+    dp = 0.1 
+    
+    z1 = unf_zfactor(p_MPaa, t_K, gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    z2 = unf_zfactor(p_MPaa+dp, t_K, gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    return (z2 - z1) / dp
+   
+
+def unf_dzdt(p_MPaa:float, 
+                t_K:float, 
+                gamma_gas:float,
+                method_z:str='Standing_Katz',
+                method_crit:str='Sutton',
+                y_h2s:float=0.0, 
+                y_co2:float=0.0, 
+                y_n2:float=0.0,
+                safe_z:bool=True
+                )->float:
+    """
+    расчет производной от z фактора по температуре
+    """
+    
+    dt = 0.01 
+    
+    z1 = unf_zfactor(p_MPaa, t_K, gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    z2 = unf_zfactor(p_MPaa, t_K + dt, gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    return (z2 - z1) / dt
+   
+
+""" 
+====================================================================================================
+Расчет вязкости газа
+====================================================================================================
+"""
+
+def unf_mu_gas_cP(p_atma:float, 
+                  t_C:float, 
+                  gamma_gas:float,
+                  method_z:str='Standing_Katz',
+                  safe_z:bool=True
+                )->float:
+    """
+     Lee correlation for gas viscosity
+     Метод расчета вязкости газа по корреляции Lee
+     включает расчет z фактора
+
+    :param p_atma: pressure, MPaa
+    :param t_C: temperature, K
+    :param gamma_gas: specific gas density (by air)
+    :param method_z: method z-factor
+    :param safe_z: safe_z 
+    :return: gas viscosity,cP
+
+    ref 1 Lee, A.L., Gonzalez, M.H., and Eakin, B.E. “The Viscosity of Natural Gases.” Journal
+    of Petroleum Technology. Vol. 18 (August 1966) 997–1,000.
+    """
+    
+    p_MPaa=atm_2_MPa(p_atma)
+    t_K=C_2_K(t_C)
+    z = unf_zfactor(p_MPaa=p_MPaa, 
+                    t_K=t_K, 
+                    gamma_gas=gamma_gas,
+                    method_z=method_z, 
+                    safe_z=safe_z)
+    return unf_mu_gas_Lee_z_cP(p_MPaa=p_MPaa,
+                               t_K=t_K,
+                               gamma_gas=gamma_gas,
+                               z=z)
+
+def unf_mu_gas_Lee_z_cP(p_MPaa:float, 
+                        t_K:float,
+                        gamma_gas:float,
+                        z:float,
+                        )->float:
+    """
+     Lee correlation for gas viscosity
+     Метод расчета вязкости газа по корреляции Lee
+
+    :param p_MPaa: pressure, MPaa
+    :param t_K: temperature, K
+    :param gamma_gas: specific gas density (by air)
+    :param z: z-factor
+    :return: gas viscosity,cP
+
+    ref 1 Lee, A.L., Gonzalez, M.H., and Eakin, B.E. “The Viscosity of Natural Gases.” Journal
+    of Petroleum Technology. Vol. 18 (August 1966) 997–1,000.
+    """
+
+    t_R = K_2_R(t_K)
+
+    m = M_AIR_GMOL * gamma_gas  # молярная масса газа
+    a = ((9.4 + 0.02 * m) * t_R ** 1.5)/(209 + 19 * m + t_R)
+    b = 3.5 + 986/t_R + 0.01 * m
+    c = 2.4 - 0.2 * b
+
+    ro_gas = unf_rho_gas_z_kgm3(p_MPaa, t_K, gamma_gas, z) * 1e-3
+    return 1e-4 * a * np.exp(b * ro_gas**c)
+
+def unf_mu_gas_Lee_z_cP_(p_MPaa:float, 
+                         t_K:float,
+                         gamma_gas:float,
+                         z:float,
+                         )->float:
+    """
+     Lee correlation for gas viscosity
+     Метод расчета вязкости газа по корреляции Lee
+     коэффициенты как в VBA - точнее чем в статье, но не понятно откуда (из справочника ЮКОСа?)
+
+    :param p_MPaa: pressure, MPaa
+    :param t_K: temperature, K
+    :param gamma_gas: specific gas density (by air)
+    :param z: z-factor
+    :return: gas viscosity,cP
+
+    ref 1 Lee, A.L., Gonzalez, M.H., and Eakin, B.E. “The Viscosity of Natural Gases.” Journal
+    of Petroleum Technology. Vol. 18 (August 1966) 997–1,000.
+    """
+
+    t_R = K_2_R(t_K)
+
+    m = M_AIR_GMOL * gamma_gas  # молярная масса газа
+    a = ((9.379 + 0.01607 * m) * t_R ** 1.5)/(209.2 + 19.26 * m + t_R)
+    b = 3.448 + 986.4/t_R + 0.01009 * m
+    c = 2.447 - 0.2224 * b
+
+    ro_gas = unf_rho_gas_z_kgm3(p_MPaa, t_K, gamma_gas, z) * 1e-3
+    return 1e-4 * a * np.exp(b * ro_gas**c)
+
+def unf_mu_gas_Lee_rho_cP(t_K: float, 
+                        gamma_gas: float, 
+                        rho_gas_kgm3: float
+                        ) -> float:
+    """
+    Метод расчета вязкости газа по корреляции Lee
+    корреляция Lee как в Pipesim
+    раняя версия корреляции - описана в статье Ли
+
+    ref 1 Lee, A.L., Gonzalez, M.H., and Eakin, B.E. “The Viscosity of Natural Gases.” Journal
+    of Petroleum Technology. Vol. 18 (August 1966) 997–1,000.
+
+    Parameters
+    ----------
+    :param t: температура, К
+    :param gamma_gas: относительная плотность газа, доли,
+    (относительно в-ха с плотностью 1.2217 кг/м3 при с.у.)
+    :param rho_gas: плотность газа при данном давлении температуре, кг/м3
+    :return: вязкость газа, сПз
+    -------
+    """
+
+    t_R = K_2_R(t_K)
+
+    # Новая корреляция Lee
+    # m = 28.9612403 * gamma_gas  # молярная масса газа
+    # a = ((9.379 + 0.01607 * m) * t_r ** 1.5) / (209.2 + 19.26 * m + t_r)
+    # b = 3.448 + 986.4 / t_r + 0.01009 * gamma_gas * 28.966
+    # c = 2.447 - 0.2224 * b
+    # Старая корреляция Lee как в Pipesim
+    m = 28.9612403 * gamma_gas  # молярная масса газа
+    a = (7.77 + 0.183 * gamma_gas) * t_R**1.5 / (122.4 + 373.6 * gamma_gas + t_R)
+    b = 2.57 + 1914.5 / t_R + 0.275 * gamma_gas
+    c = 1.11 + 0.04 * b
+    gas_viscosity = 1e-4 * a * np.exp(b * (rho_gas_kgm3 / 1000) ** c)
+    return gas_viscosity
+
+""" 
+====================================================================================================
+Расчет объемного коэффициента газа
+====================================================================================================
+"""
+
+def unf_bg_gas_z_m3m3(p_MPaa:float, 
+                       t_K:float,
+                       z:float)->float:
+    """
+    Equation for gas FVF based on z
+
+    Расчет объемного коэффициента через z фактор
+    расчет z может быть затратным, чтобы пересчитывать каждый раз, а он него много чего зависит
+    тут можно использовать уже посчитанный ранее z
+
+    :param t_K: temperature, K
+    :param p_MPaa: pressure, MPaa
+    :param z: z-factor
+    :return: formation volume factor for gas bg, m3/m3
+    """
+      # z фактор при стандартных условиях берем из констант равный 1
+      # хотя он немного отличается - можно было бы и учесть может быть?
+
+    return P_SC_MPa * t_K * z / (Z_SC * T_SC_K * p_MPaa) # тут от нормальный условий по температуре
+
+def unf_bg_gas_m3m3(p_atma:float, 
+                    t_C:float,
+                    gamma_gas:float,
+                    method_z:str='Standing', 
+                    safe_z:bool=True
+                    )->float:
+    """
+    Equation for gas FVF based on gamma_gas
+
+    Расчет объемного коэффициента через удельную плотность газа
+    включает расчет z фактора
+
+    :param t_K: temperature, K
+    :param p_MPaa: pressure, MPaa
+    :param z: z-factor
+    :return: formation volume factor for gas bg, m3/m3
+    """
+    p_MPaa=atm_2_MPa(p_atma)
+    t_K=C_2_K(t_C)
+    z = unf_zfactor(p_MPaa=p_MPaa, 
+                    t_K=t_K, 
+                    gamma_gas=gamma_gas,
+                    method_z=method_z, 
+                    safe_z=safe_z)
+    return unf_bg_gas_z_m3m3(p_MPaa=p_MPaa, t_K=t_K, z=z)
+
+""" 
+====================================================================================================
+Расчет плотности газа
+====================================================================================================
+"""
+
+def unf_rho_gas_z_kgm3(p_MPaa:float, 
+                       t_K:float, 
+                       gamma_gas:float, 
+                       z:float
+                       )->float:
+    """
+    выражение для плотности воздуха на основе уравнения состояния
+    """
+
+    mmol_kgmol = gamma_gas * M_AIR_KGMOL
+    return p_MPaa * const.mega * mmol_kgmol / (z * const.R * t_K)
+
+def unf_rho_gas_kgm3(p_atma:float, 
+                     t_C:float,
+                     gamma_gas:float,
+                     method_z:str='Standing')->float:
+    """
+    выражение для плотности воздуха на основе уравнения состояния
+    """
+
+    p_MPaa=atm_2_MPa(p_atma)
+    t_K=C_2_K(t_C)
+    z = unf_zfactor(p_MPaa=p_MPaa, 
+                    t_K=t_K, 
+                    gamma_gas=gamma_gas,
+                    method_z=method_z)
+    
+    return unf_rho_gas_z_kgm3(p_MPaa, t_K, gamma_gas, z)
+
+def unf_rho_gas_bg_kgm3(gamma_gas:float, 
+                        bg_m3m3:float
+                       )->float:
+    return gamma_gas * RHO_AIR_kgm3 / bg_m3m3
+
+""" 
+====================================================================================================
+Теплофизические свойств газа
+====================================================================================================
+"""
+
+def unf_heat_capacity_gas_Mahmood_Moshfeghian_JkgC(p_MPaa:float, 
+                                                   t_K:float, 
+                                                   gamma_gas:float
+                                                   )->float:
+    """
+        Gas heat capacity by Mahmood Moshfeghian for 0.1 to 20 MPa
+    should be noted that the concept of heat capacity is valid only for the single phase region.
+
+    :param p_MPaa: pressure, MPaa
+    :param t_K: temperature, K
+    :param gamma_gas: specific gas density by air
+    :return: gas heat capacity in JkgC = JkgK
+
+    ref1 https://www.jmcampbell.com/tip-of-the-month/2009/07/
+    variation-of-natural-gas-heat-capacity-with-temperature-pressure-and-relative-density/
+    """
+    t_C = K_2_C(t_K)
+    a = 0.9
+    b = 1.014
+    c = -0.7
+    d = 2.170
+    e = 1.015
+    f = 0.0214
+    return ((a * (b**t_C) * (t_C**c) + d * (e**p_MPaa) * (p_MPaa**f)) * ((gamma_gas / 0.60) ** 0.025)) * 1000
+
+
+
+def unf_thermal_conductivity_gas_methane_WmK(t_C:float)->float: # TODO заменить
+    """
+        Теплопроводность метана
+
+    :param t_c: температура в С
+    :return: теплопроводность в Вт / м К
+
+    Данная функкия является линейным приближением табличных значений при 1 бар
+    требует корректировки, является временной затычкой, взята от безысходности
+    """
+    return (42.1 + (42.1 - 33.1)/(80-18)*(t_C - 80))/1000
+
+def unf_gas_ideal_heat_capacity_ratio(gamma_gas:float, 
+                                t_K:float
+                                )->float:
+    """
+    http://www.jmcampbell.com/tip-of-the-month/2013/05/variation-of-ideal-gas-heat-capacity-ratio-with-temperature-and-relative-density/
+     eq 6
+     temp range - 25C to 150 C
+     gg range 0.55 to 2
+    """
+    
+    return (1.6 - 0.44 * gamma_gas + 0.097 * gamma_gas * gamma_gas) * (1 + 0.0385 * gamma_gas -  0.000286 * t_K)
+    
+
+
+
+
+
+# =================================================================================================
+
+def unf_gas_isotermal_compressibility_1MPa(p_MPaa:float, 
+                                            t_K:float, 
+                                            gamma_gas:float,
+                                            method_z:str='Standing_Katz',
+                                            method_crit:str='Sutton',
+                                            y_h2s:float=0.0, 
+                                            y_co2:float=0.0, 
+                                            y_n2:float=0.0,
+                                            safe_z:bool=True
+                                            )->float:
+    """
+    расчет изотермической сжимаемости газа на основе z фактора
+    """
+    z = unf_zfactor(p_MPaa, t_K,  gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    dzdp = unf_dzdp(p_MPaa, t_K,  gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    betta_t = 1/p_MPaa - 1/z *dzdp
+    return betta_t 
+
+
+def unf_gas_thermal_expansion_1K(p_MPaa:float, 
+                                            t_K:float, 
+                                            gamma_gas:float,
+                                            method_z:str='Standing_Katz',
+                                            method_crit:str='Sutton',
+                                            y_h2s:float=0.0, 
+                                            y_co2:float=0.0, 
+                                            y_n2:float=0.0,
+                                            safe_z:bool=True
+                                            )->float:
+    """
+    расчет изотермической сжимаемости газа на основе z фактора
+    """
+    z = unf_zfactor(p_MPaa, t_K,  gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    dzdt =unf_dzdt(p_MPaa, t_K,  gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    alpha = 1/t_K + 1/z *dzdt
+    return alpha
+
+
+
+def unf_cp_gas_JkgC(p_MPaa: float, 
+                    t_K: float, 
+                    gamma_gas: float
+                    ) -> float:
+    """
+    Расчет удельной теплоемкости газа при постоянном давлении
+    по упрощенной корреляции на основе расчетов уравнения состояния
+
+
+
+    Parameters
+    ----------
+    :param p: давление, МПа
+    :param t: температура, К
+    :param gamma_gas: относительная плотность газа, доли,
+    (относительно в-ха с плотностью 1.2217 кг/м3 при с.у.)
+
+    Returns
+    -------
+    Удельная теплоемкость газа при постоянном давлении, Дж/(кг*К)
+
+    Ref:
+    Mahmood Moshfeghian Petroskills
+    https://www.jmcampbell.com/tip-of-the-month/2009/07/variation-of-natural-gas-heat-capacity-with-temperature-pressure-and-relative-density/
+    """
+    t_C = K_2_C(t_K)
+    a = 0.9
+    b = 1.014
+    c = -0.7
+    d = 2.170
+    e = 1.015
+    f = 0.0214
+
+    return (a * b**t_C * t_C**c + d * e**p_MPaa *  p_MPaa**f) * (gamma_gas / 0.6) ** 0.025 * 1000
+
+
+def  unf_cv_gas_JkgC(p_MPaa:float, 
+                        t_K:float, 
+                        gamma_gas:float,
+                        method_z:str='Standing_Katz',
+                        method_crit:str='Sutton',
+                        y_h2s:float=0.0, 
+                        y_co2:float=0.0, 
+                        y_n2:float=0.0,
+                        safe_z:bool=True
+                        )->float:
+
+    dp = 0.1 
+    
+    z = unf_zfactor(p_MPaa, t_K, gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    z2 = unf_zfactor(p_MPaa+dp, t_K, gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    betta_t_1MPa = 1/p_MPaa - 1/z *  (z2 - z) / dp
+    betta_t_1Pa = betta_t_1MPa / 1e6
+
+    dt = 0.01 
+    
+    z2 = unf_zfactor(p_MPaa, t_K + dt, gamma_gas, method_z, method_crit, y_h2s, y_co2, y_n2, safe_z)
+    alpha_1K = 1/t_K + 1/z *(z2 - z) / dt
+
+
+    rho_kgm3 = unf_rho_gas_z_kgm3(p_MPaa, t_K, gamma_gas, z)
+
+    cp_JkgC = unf_cp_gas_JkgC(p_MPaa, t_K, gamma_gas)
+
+    cv_gas_JkgC = cp_JkgC - t_K * alpha_1K**2 / betta_t_1Pa /rho_kgm3
+
+    return cv_gas_JkgC
+
+
+
+
 
 # при загрузке модуля считываем из json таблицу Стендинга Катца для оценки z фактора
 # и готовим ее для расчета
 StandingKatz_curve = _load_StandingKatz_curve_()
+

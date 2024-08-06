@@ -2,42 +2,54 @@
 nt for petroleum engineering calculations
 """
 
+import scipy.constants as const
 
 
 # ходовые константы от которых все должно зависеть
 # названия большими буквами
 # названия размерностей стандартные - маленькие буквы, кроме фамилий и множителей
 
-
-G_ms2 = 9.81               # gravity
-PI = 3.14159265359
+""" 
+====================================================================================================
+определение стандартных условий и параметров при стандартных условиях
+====================================================================================================
+"""
 
 P_SC_atma = 1           # pressure standard condition
-T_SC_atma = 20          # temperature standard condition
-P_SC_MPa = 0.101325 
-P_SC_Pa = 101325
-P_SC_PSI = 14.7
+T_SC_C = 20             # temperature standard condition
+
+P_SC_MPa = const.atm/const.mega 
+P_SC_PSI = const.atm/const.psi
+T_SC_K = T_SC_C + const.zero_Celsius     # температура в стандартных условиях, К
+
+M_AIR_KGMOL = 0.028966                 # Air molar mass
+M_AIR_GMOL = M_AIR_KGMOL * 1e3         # Air molar mass
+Z_SC = 1
+# плотность воздуха при стандартных условиях definition from https://en.wikipedia.org/wiki/Density_of_air
+# можно определить из уравнения состояния полагая z = 1
+RHO_AIR_kgm3 = const.atm * M_AIR_KGMOL / (Z_SC * const.R * T_SC_K)      
+# RHO_AIR_kgm3 = 1.2041512897703845          
+GAMMA_WAT = 1                       # удельная плотность воды при стандартных условиях   
+RHO_WATER_SC_kgm3 = 1000            # плотность воды при стандартных условиях (для расчета удельной)
+
+
+AT = 98066.5  # technical atmosphere in Pa,  техническая атмосфера в Па
 
 RS_MAX_Velarde = 800                # внутреннее ограничение для корреляции Веларде МакКейна для расчета газосодержания
 T_McCain_K_MIN = 289   
 
-T_K_MIN = 273         
-T_K_MAX = 573                   
-T_K_ZERO_C = 273
+T_K_MIN = const.zero_Celsius         
+T_K_MAX = const.zero_Celsius + 300                   
+#T_K_ZERO_C = const.zero_Celsius
 
-T_C_MIN = T_K_MIN - T_K_ZERO_C
-T_C_MAX = T_K_MAX - T_K_ZERO_C
-T_SC_K = T_SC_atma + T_K_ZERO_C     # температура в стандартных условиях, К
+T_C_MIN = 0
+T_C_MAX = 300
 
-R  = 8.31                           # Universal gas constant
-RHO_AIR_kgm3 = 1.225                # плотность воздуха при стандартных условиях definition from https://en.wikipedia.org/wiki/Density_of_air
-GAMMA_WAT = 1                       # удельная плотность воды при стандартных условиях   
-RHO_WATER_SC_kgm3 = 1000            # плотность воды при стандартных условиях (для расчета удельной)
+
+
 
 ZNLF_RATE = 0.1                     # константа перехода к расчету барботажа (предельный/минимальный дебит жидкости)
 
-M_AIR_KGMOL = 0.028966                 # Air molar mass
-M_AIR_GMOL = 28.966                 # Air molar mass
 
 SIGMA_WAT_GAS_NM = 0.01             # поверхностное натяжение на границе с воздухом (газом) - типовые значения для дефолтных параметров  Н/м
 SIGMA_OIL_NM = 0.025
@@ -45,8 +57,12 @@ SIGMA_OIL_NM = 0.025
 MU_WAT_cP = 0.36
 MU_GAS_cP = 0.0122
 MU_OIL_cP = 0.7
+""" 
+====================================================================================================
+параметры для задания свойств по умолчанию
+====================================================================================================
+"""
 
-# параметры для задания свойств по умолчанию 
 GAMMA_GAS = 0.6
 GAMMA_WAT = 1
 GAMMA_OIL = 0.86
@@ -57,4 +73,3 @@ Z = 0.9
 T_RES_C = 90
 ROUGHNESS = 0.0001
 
-AT = 98066.5  # technical atmosphere in Pa,  техническая атмосфера в Па

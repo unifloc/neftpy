@@ -8,22 +8,17 @@ import numpy as np
 
 class PVTgTestCase(unittest.TestCase):
 
-    def test_unf_pseudocritical_temperature_K(self):
-        gamma_gas = 0.6
-        y_h2s = 0.01
-        y_co2 = 0.03
-        y_n2 = 0.02
-        self.assertAlmostEqual(pvtg.unf_pseudocritical_temperature_K(gamma_gas, y_h2s, y_co2, y_n2), 198.0708725589674,
-                               delta=0.0001)
-
-    def test_unf_pseudocritical_pressure_MPa(self):
-        gamma_gas = 0.6
-        y_h2s = 0.01
-        y_co2 = 0.03
-        y_n2 = 0.02
-        self.assertAlmostEqual(pvtg.unf_pseudocritical_pressure_MPa(gamma_gas, y_h2s, y_co2, y_n2), 5.09893164741181,
-                               delta=0.0001)
         
+    def test_unf_pseudocritical_pressure_MPa_temperature_K(self):
+        gamma_gas = 0.6
+        y_h2s = 0.01
+        y_co2 = 0.03
+        y_n2 = 0.02
+        self.assertTrue(np.allclose(pvtg.unf_pseudocritical_p_MPa_t_K(gamma_gas, y_h2s, y_co2, y_n2), 
+                               (5.09893164741181, 198.0708725589674),
+                               rtol=0.0001))
+
+
         
     def test_unf_pseudocritical_temperature_Standing_K(self):
         gamma_gas = 0.6
@@ -37,18 +32,20 @@ class PVTgTestCase(unittest.TestCase):
                                4.567119999999999,
                                delta=0.0001)
         
-    def test_unf_zfactor_DAK(self):
+    def test_unf_zfactor(self):
         p_MPaa = 10
         t_K = 350
-        ppc_MPa = 7.477307083789863
-        tpc_K = 239.186917147216
-        self.assertAlmostEqual(pvtg.unf_zfactor_DAK(p_MPaa, t_K, ppc_MPa, tpc_K), 0.8607752185760458, delta=0.0001)
+        gamma_gas = 0.6
+        self.assertAlmostEqual(pvtg.unf_zfactor(p_MPaa, t_K, gamma_gas), 
+                               0.901739, 
+                               delta=0.0001)
 
-    def test_unf_zfactor_DAK_ppr(self):
+    def test_unf_zfactor_DAK(self):
         ppr = 4
         tpr = 2
 
-        self.assertAlmostEqual(pvtg.unf_zfactor_DAK_ppr(ppr, tpr), 0.9426402059431057,
+        self.assertAlmostEqual(pvtg.unf_zfactor_DAK(ppr, tpr), 
+                               0.9426402059431057,
                                delta=0.0001)
 
     def test_unf_z_factor_Kareem(self):
@@ -63,7 +60,7 @@ class PVTgTestCase(unittest.TestCase):
         p_MPaa = 10
         z = 0.84
         gamma_gas = 0.6
-        self.assertAlmostEqual(pvtg.unf_gasviscosity_Lee_cP(p_MPaa, t_K,  z, gamma_gas), 0.015423237238038448, delta=0.0001)
+        self.assertAlmostEqual(pvtg.unf_mu_gas_Lee_cP(p_MPaa, t_K,  z, gamma_gas), 0.015423237238038448, delta=0.0001)
 
     def test_unf_gas_fvf_m3m3(self):
         t_K = 350
