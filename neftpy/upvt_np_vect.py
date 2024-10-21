@@ -88,8 +88,6 @@ unf_compressibility_oil_VB_1Mpa = pvto.unf_compressibility_oil_VB_1Mpa
 
 unf_gamma_gas_Mccain = pvto.unf_gamma_gas_Mccain
 
-unf_deadoilviscosity_Beggs_cP = pvto.unf_viscosity_deadoil_Beggs_cP
-
 """ 
 ====================================================================================================
 Расчет вязкости нефти

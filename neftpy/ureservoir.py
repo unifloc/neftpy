@@ -7,20 +7,21 @@ from neftpy.uconst import *
 
 import numpy as np
 
-def ipr_Vogel_qliq_sm3day(p_test_atma:float, 
+def _ipr_Vogel_qliq_sm3day(p_test_atma:float, 
                           p_res_atma:float, 
-                          pb_atma:float, 
                           pi_sm3dayatm:float, 
-                          fw_perc:float)->float:
+                          fw_perc:float,
+                          pb_atma:float=0
+                          )->float:
     """
     Calculate well liquid rate using Vogel's method with water cut correction.
 
     Args:
         p_test_atma (float): Test pressure, atm
         p_res_atma (float): Reservoir pressure, atm
-        pb_atma (float): Bubble point pressure, atm
         pi_sm3dayatm (float): Productivity index, m3/day/atm
         fw_perc (float): Water cut, %
+        pb_atma (float): Bubble point pressure, atm
 
     Returns:
         float: Well bottom pressure, atm
@@ -66,20 +67,25 @@ def ipr_Vogel_qliq_sm3day(p_test_atma:float,
             cd = fw * (cg / pi_sm3dayatm) + fo * 0.125 * pb_atma * (-1 + (1 + 80 * ((0.001 * qo_max) / (qo_max - qb))) ** 0.5)
             return (p_wfg - p_test_atma) / (cd / cg) + qo_max
 
-def ipr_Vogel_pwf_atma(q_test_sm3day:float, 
+ipr_Vogel_qliq_sm3day = np.vectorize(_ipr_Vogel_qliq_sm3day)
+
+# ==============================================================
+
+def _ipr_Vogel_pwf_atma(q_test_sm3day:float, 
                        p_res_atma:float, 
-                       pb_atma:float, 
                        pi_sm3dayatm:float, 
-                       fw_perc:float)->float:
+                       fw_perc:float, 
+                       pb_atma:float=0
+                       )->float:
     """
     Calculate well bottom pressure using Vogel's method with water cut correction.
 
     Args:
         q_test_sm3day (float): Test flow rate, m3/day
         p_res_atma (float): Reservoir pressure, atm
-        pb_atma (float): Bubble point pressure, atm
         pi_sm3dayatm (float): Productivity index, m3/day/atm
         fw_perc (float): Water cut, %
+        pb_atma (float): Bubble point pressure, atm
 
     Returns:
         float: Well bottom pressure, atm
@@ -119,11 +125,15 @@ def ipr_Vogel_pwf_atma(q_test_sm3day:float,
     if ipr_Vogel_pwf_atma < 0:
         return 0
 
-def ipr_Vogel_pi_sm3dayatm(q_test_sm3day:float, 
-                           p_test_sm3day:float, 
-                           p_res_sm3day:float, 
-                           pb_atma:float, 
-                           fw_perc:float)->float:
+ipr_Vogel_pwf_atma = np.vectorize(_ipr_Vogel_pwf_atma)
+
+# ===============================================
+
+def _ipr_Vogel_pi_sm3dayatm(q_test_sm3day:float, 
+                            p_test_sm3day:float, 
+                            p_res_sm3day:float, 
+                            fw_perc:float, 
+                            pb_atma:float=0)->float:
     """
     Calculate productivity index using Vogel's method with water cut correction.
 
@@ -154,10 +164,12 @@ def ipr_Vogel_pi_sm3dayatm(q_test_sm3day:float,
         return 0
 
     j = q_test_sm3day / (p_res_sm3day - p_test_sm3day)
-    Q_calibr = ipr_Vogel_qliq_sm3day(p_test_sm3day, p_res_sm3day, pb_atma, j, fw_perc)
+    Q_calibr = _ipr_Vogel_qliq_sm3day(p_test_sm3day, p_res_sm3day, j, fw_perc, pb_atma)
     j = j / ((Q_calibr) / q_test_sm3day)
-    Q_calibr = ipr_Vogel_qliq_sm3day(p_test_sm3day, p_res_sm3day, pb_atma, j, fw_perc)
+    Q_calibr = _ipr_Vogel_qliq_sm3day(p_test_sm3day, p_res_sm3day, j, fw_perc, pb_atma)
     if abs(Q_calibr - q_test_sm3day) > 0.001:
         raise ValueError("Calculation failed")
 
     return j
+
+ipr_Vogel_pi_sm3dayatm = np.vectorize(_ipr_Vogel_pi_sm3dayatm)

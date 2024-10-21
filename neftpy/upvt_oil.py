@@ -98,7 +98,7 @@ def unf_pb_Valko_MPaa(t_K:float=350,
 
 
 def unf_pb_Glaso_MPaa(t_K:float=350, 
-                      rs_m3m3:float=100, 
+                      rsb_m3m3:float=100, 
                       gamma_oil:float=0.85, 
                       gamma_gas:float=0.8
                       )->float:
@@ -106,7 +106,7 @@ def unf_pb_Glaso_MPaa(t_K:float=350,
         Glaso correlation(1980) for bubble point pressure
 
     :param t_K: temperature in K
-    :param rs_m3m3: gas-oil ratio in m3/m3
+    :param rsb_m3m3: gas-oil ratio in m3/m3
     :param gamma_oil: oil density (by water)
     :param gamma_gas: gas density (by air)
     :return: bubble point pressure im MPa abs
@@ -117,7 +117,7 @@ def unf_pb_Glaso_MPaa(t_K:float=350,
     #  можно дополнить код, поправками на неуглеводородные составляющие в нефти, в статье есть
     api = gamma_oil_2_api(gamma_oil)
     t_F = K_2_F(t_K)
-    rs_scfstb = m3m3_2_scfstb(rs_m3m3)
+    rs_scfstb = m3m3_2_scfstb(rsb_m3m3)
     pb = (rs_scfstb / gamma_gas) ** 0.816 * (t_F ** 0.172 / api ** 0.989)
     log_pb = np.log10(pb)
     pb = psi_2_MPa(10 ** (1.7669 + 1.7447 * log_pb - 0.30218 * log_pb ** 2)) 

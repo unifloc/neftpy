@@ -4,8 +4,55 @@
 
 import numpy as np
 import neftpy.uconvert as uc
-import neftpy.upvt as upvt
+import neftpy.uconst as uconst
+import neftpy.upvt_np_vect as upvt
 import scipy.optimize as opt
+
+
+class Feed:
+    """
+    свойства потока флюидов
+    """
+    def __init__(self):
+        self.fluid = BlackOilStanding()
+        
+        self.q_liq_sm3day = 10
+        self.fw_perc = 0
+        self.rp_m3m3 = 100
+        self.q_gas_free_sm3day = 0
+
+    def calc(self, p_atma, t_C):
+        self.fluid.calc(p_bar=p_atma, t_C=t_C)
+
+    def fw_fr(self):
+        return self.fw_perc / 100
+
+    def q_oil_sm3day(self):
+        return self.q_liq_sm3day * (1 - self.fw_fr)
+
+    def q_gas_sm3day(self):
+        return self.q_oil_sm3day * self.rp_m3m3 + self.q_gas_free_sm3day  
+    
+    def q_gas_insitu_sm3day(self):
+        """ 
+        расход газа в заданных термобарических условиях приведенный к стандартным условиям
+        """
+        _q_gas_insitu_sm3day = self.q_gas_sm3day - self.fluid.rs_m3m3 * self.q_oil_sm3day
+        return np.where(_q_gas_insitu_sm3day < 0,
+                        0,
+                        _q_gas_insitu_sm3day )
+
+    def q_gas_rc_m3day(self):
+        return self.q_gas_insitu_sm3day * self.fluid.b_gas_m3m3
+    
+    def q_water_sm3day(self):
+        return self.q_liq_sm3day * self.fw_fr
+
+
+    def gas_fraction(self):
+        pass
+
+
 
 class BlackOilStanding:
 
@@ -41,10 +88,10 @@ class BlackOilStanding:
         self.y_co2 = y_co2
         self.y_n2 = y_n2
         # термобарические условия для которых рассчитаны свойства
-        self.p_bar = uc.pressure_sc_bar                 # thermobaric conditions for all parameters
-        self.t_c = uc.temperature_sc_C                  # can be set up by calc method
+        self.p_atma = uconst.P_SC_atma                 # thermobaric conditions for all parameters
+        self.t_C = uconst.T_SC_C                  # can be set up by calc method
 
-        self.__p_calibrated_MPaa =  uc.bar_2_MPa(self.p_bar)
+        self.__p_calibrated_MPaa =  uc.atm_2_MPa(self.p_atma)
 
         # расчетные параметры доступны только для чтения через свойства
 
@@ -109,51 +156,78 @@ class BlackOilStanding:
 
 
     def __calc_pb_MPaa(self):
-        self.pb_MPaa = upvt.unf_pb_Standing_MPaa(self.rsb_m3m3, self.gamma_oil, self.gamma_gas, self.t_K)
+        self.pb_MPaa = upvt.unf_pb_Standing_MPaa(rsb_m3m3 = self.rsb_m3m3, 
+                                                 gamma_oil = self.gamma_oil, 
+                                                 gamma_gas = self.gamma_gas, 
+                                                 t_K = self.t_K)
         self.pb_bar = uc.MPa_2_bar(self.pb_MPaa)
 
         # найдем калибровочный коэффициент для давления насыщения
         self.p_cal_mult = np.where(self.pb_calibr_bar > 0, 
                                    self.pb_bar / self.pb_calibr_bar, 
                                    1.)  
-        self.__p_calibrated_MPaa = uc.bar_2_MPa(self.p_bar * self.p_cal_mult)
+        self.__p_calibrated_MPaa = uc.bar_2_MPa(self.p_atma * self.p_cal_mult)
 
     def __calc_rs_m3m3(self):
-        self.rs_m3m3 = upvt.unf_rs_Standing_m3m3(self.__p_calibrated_MPaa, self.pb_MPaa, self.rsb_m3m3, self.gamma_oil, self.gamma_gas, self.t_K)
-
-    #def _calc_compressibility_oil_1Mpa(self):
-    #    return upvt.unf_compressibility_oil_VB_1Mpa(self._rs_m3m3, self.t_K, self.gamma_oil, self.pcal_MPaa, self.gamma_gas)
-
-    #def _calc_b_oilb_m3m3(self):
-    #    return upvt.unf_bo_saturated_Standing_m3m3(self.rsb_m3m3, self.gamma_gas, self.gamma_oil, self.t_K)
+        self.rs_m3m3 = upvt.unf_rs_Standing_m3m3(p_MPaa = self.__p_calibrated_MPaa, 
+                                                 pb_MPaa = self.pb_MPaa, 
+                                                 rsb_m3m3 = self.rsb_m3m3, 
+                                                 gamma_oil = self.gamma_oil, 
+                                                 gamma_gas = self.gamma_gas, 
+                                                 t_K = self.t_K)
 
     def __calc_b_rho_compressibility_oil(self):
         # поскольку объемный коэффициент, плотность и сжимаемость при давлениях выше pb 
         # тесно связаны между собой - считаем их вместе
-        co_1MPa = upvt.unf_compressibility_oil_VB_1Mpa(self.rs_m3m3, self.t_K, self.gamma_oil, self.__p_calibrated_MPaa, self.gamma_gas)
+        co_1MPa = upvt.unf_compressibility_oil_VB_1Mpa(rs_m3m3 = self.rs_m3m3, 
+                                                       t_K = self.t_K, 
+                                                       gamma_oil = self.gamma_oil, 
+                                                       p_MPaa = self.__p_calibrated_MPaa, 
+                                                       gamma_gas = self.gamma_gas)
         self.compr_oil_1bar = uc.compr_1mpa_2_1bar(co_1MPa)
 
         # оценим значение объемного коэффициента
         # оценим значение объемного коэффициента при давлении насыщения
-        self.b_oilb_m3m3 = upvt.unf_bo_saturated_Standing_m3m3(self.rsb_m3m3, self.gamma_gas, self.gamma_oil, self.t_K)
+        self.b_oilb_m3m3 = upvt.unf_bo_saturated_Standing_m3m3(rs_m3m3 = self.rsb_m3m3, 
+                                                               gamma_gas = self.gamma_gas, 
+                                                               gamma_oil = self.gamma_oil, 
+                                                               t_K = self.t_K)
         self.__b_oil_m3m3 = np.where(self.__p_calibrated_MPaa > self.pb_MPaa, 
-                                 upvt.unf_bo_above_pb_m3m3(self.b_oilb_m3m3, co_1MPa, self.pb_MPaa, self.__p_calibrated_MPaa),
-                                 upvt.unf_bo_saturated_Standing_m3m3(self.rs_m3m3, self.gamma_gas, self.gamma_oil, self.t_K)
+                                 upvt.unf_bo_above_pb_m3m3(bob_m3m3 = self.b_oilb_m3m3, 
+                                                           compr_o_1MPa = co_1MPa, 
+                                                           pb_MPaa = self.pb_MPaa, 
+                                                           p_MPaa = self.__p_calibrated_MPaa),
+                                 upvt.unf_bo_saturated_Standing_m3m3(rs_m3m3 = self.rs_m3m3, 
+                                                                     gamma_gas = self.gamma_gas, 
+                                                                     gamma_oil = self.gamma_oil, 
+                                                                     t_K = self.t_K)
                                 )
         
         # проверим необходимость калибровки значения объемного коэффициента
-        self.b_oil_cal_mult = np.where(self.b_oilb_calibr_m3m3 > 0, (self.b_oilb_calibr_m3m3 - 1) / (self.b_oilb_m3m3 - 1), 1.)
+        self.b_oil_cal_mult = np.where(self.b_oilb_calibr_m3m3 > 0, 
+                                       (self.b_oilb_calibr_m3m3 - 1) / (self.b_oilb_m3m3 - 1), 
+                                       1.)
         self.b_oil_m3m3 = 1 + self.b_oil_cal_mult * (self.__b_oil_m3m3 - 1)
         # плотность нефти    
-        self.rho_oil_kgm3 = upvt.unf_density_oil_Standing(self.__p_calibrated_MPaa , self.pb_MPaa, co_1MPa, self.rs_m3m3, self.b_oil_m3m3,
-                                                          self.gamma_gas, self.gamma_oil) 
+        self.rho_oil_kgm3 = upvt.unf_density_oil_Standing(p_MPaa = self.__p_calibrated_MPaa , 
+                                                          pb_MPaa = self.pb_MPaa, 
+                                                          co_1MPa = co_1MPa, 
+                                                          rs_m3m3 = self.rs_m3m3, 
+                                                          bo_m3m3 = self.b_oil_m3m3,
+                                                          gamma_gas = self.gamma_gas, 
+                                                          gamma_oil = self.gamma_oil) 
         
 
     def __calc_mu_oil_cP(self):
         # оценим значение вязкости
-        self.mu_dead_oil_cP = upvt.unf_deadoilviscosity_Beggs_cP(self.gamma_oil, self.t_K)
-        self.mu_oilb_cP = upvt.unf_saturatedoilviscosity_Beggs_cP(self.mu_dead_oil_cP, self.rsb_m3m3)
-        self.mu_oil_cP = upvt.unf_oil_viscosity_Beggs_VB_cP(self.mu_dead_oil_cP, self.rs_m3m3, self.__p_calibrated_MPaa , self.pb_MPaa)
+        self.mu_dead_oil_cP = upvt.unf_viscosity_deadoil_Beggs_cP(gamma_oil = self.gamma_oil, 
+                                                                 t_K = self.t_K)
+        self.mu_oilb_cP = upvt.unf_viscosity_saturatedoil_Beggs_cP(mu_oil_dead_cP = self.mu_dead_oil_cP, 
+                                                                   rs_m3m3 = self.rsb_m3m3)
+        self.mu_oil_cP = upvt.unf_viscosity_oil_Beggs_VB_cP(mu_oil_dead_cP = self.mu_dead_oil_cP, 
+                                                            rs_m3m3 = self.rs_m3m3, 
+                                                            p_MPaa = self.__p_calibrated_MPaa, 
+                                                            pb_MPaa = self.pb_MPaa)
         if self.mu_oilb_calibr_cP > 0:
             self.mu_cal_mult = self.mu_oilb_calibr_cP / self.mu_oilb_cP
             self.mu_oil_cP = self.mu_cal_mult * self.mu_oil_cP
@@ -161,11 +235,13 @@ class BlackOilStanding:
 
     def __calc_termodynamic_oil_props(self):
         # определим термодинамические свойства нефти
-        self._heatcap_oil_jkgc = upvt.unf_heat_capacity_oil_Gambill_JkgC(self.gamma_oil, self.t_c)
-        self._thermal_conduct_oil_wmk = upvt.unf_thermal_conductivity_oil_Cragoe_WmK(self.gamma_oil, self.t_c)
+        self._heatcap_oil_jkgc = upvt.unf_heat_capacity_oil_Gambill_JkgC(gamma_oil = self.gamma_oil, 
+                                                                         t_C = self.t_C)
+        self._thermal_conduct_oil_wmk = upvt.unf_thermal_conductivity_oil_Cragoe_WmK(gamma_oil = self.gamma_oil, 
+                                                                                     t_C = self.t_C)
 
     def calc(self, p_bar, t_C):
-        self.p_bar = p_bar
+        self.p_atma = p_bar
         self.t_C = t_C 
         # в расчете часто используются MPa и K - сконвертируем и сохраним соответствующие значения
         self.p_MPaa = uc.bar_2_MPa(p_bar)
@@ -185,6 +261,12 @@ class BlackOilStanding:
         # свойства газа 
 
         # свойства воды
+
+    #def _calc_compressibility_oil_1Mpa(self):
+    #    return upvt.unf_compressibility_oil_VB_1Mpa(self._rs_m3m3, self.t_K, self.gamma_oil, self.pcal_MPaa, self.gamma_gas)
+
+    #def _calc_b_oilb_m3m3(self):
+    #    return upvt.unf_bo_saturated_Standing_m3m3(self.rsb_m3m3, self.gamma_gas, self.gamma_oil, self.t_K)
 
 """
         # определим термодинамические свойства нефти
