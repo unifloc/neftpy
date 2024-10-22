@@ -4,6 +4,7 @@ from neftpy.uconst import *
 
 import neftpy.upvt_oil as pvto
 import neftpy.upvt_gas as pvtg
+import neftpy.upvt_wat as pvtw
 
 import numpy as np
 
@@ -66,9 +67,9 @@ unf_bo_below_Glaso_m3m3 = pvto.unf_bo_below_Glaso_m3m3
 ====================================================================================================
 """
 
-unf_density_oil_Mccain = np.vectorize(pvto.unf_density_oil_Mccain)
+unf_rho_oil_Mccain_kgm3 = np.vectorize(pvto.unf_rho_oil_Mccain_kgm3)
 
-unf_density_oil_Standing = pvto.unf_density_oil_Standing
+unf_rho_oil_Standing_kgm3 = pvto.unf_rho_oil_Standing_kgm3
 
 """ 
 ====================================================================================================
@@ -165,3 +166,20 @@ unf_cv_gas_JkgC = np.vectorize(pvtg.unf_cv_gas_JkgC)
 unf_cp_gas_JkgC = pvtg.unf_cp_gas_JkgC
 unf_gas_thermal_expansion_1K = np.vectorize(pvtg.unf_gas_thermal_expansion_1K)
 unf_gas_isotermal_compressibility_1MPa = np.vectorize(pvtg.unf_gas_isotermal_compressibility_1MPa)
+
+
+""" 
+====================================================================================================
+Расчет свойств воды
+====================================================================================================
+"""
+
+unf_bw_McCain_m3m3 = pvtw.unf_bw_McCain_m3m3
+
+unf_rho_water_bw_kgm3 = pvtw.unf_rho_water_bw_kgm3
+
+unf_mu_water_McCain_cP = pvtw.unf_mu_water_McCain_cP
+
+unf_gamma_water_from_salinity_m3m3 = pvtw.unf_gamma_water_from_salinity_m3m3
+
+unf_salinity_from_gamma_water_ppm =pvtw.unf_salinity_from_gamma_water_ppm

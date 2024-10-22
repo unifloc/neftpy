@@ -209,7 +209,7 @@ class BlackOilStanding:
                                        1.)
         self.b_oil_m3m3 = 1 + self.b_oil_cal_mult * (self.__b_oil_m3m3 - 1)
         # плотность нефти    
-        self.rho_oil_kgm3 = upvt.unf_density_oil_Standing(p_MPaa = self.__p_calibrated_MPaa , 
+        self.rho_oil_kgm3 = upvt.unf_rho_oil_Standing_kgm3(p_MPaa = self.__p_calibrated_MPaa , 
                                                           pb_MPaa = self.pb_MPaa, 
                                                           co_1MPa = co_1MPa, 
                                                           rs_m3m3 = self.rs_m3m3, 
@@ -240,7 +240,82 @@ class BlackOilStanding:
         self._thermal_conduct_oil_wmk = upvt.unf_thermal_conductivity_oil_Cragoe_WmK(gamma_oil = self.gamma_oil, 
                                                                                      t_C = self.t_C)
 
-    def calc(self, p_bar, t_C):
+        # определим термодинамические свойства нефти
+        #self._heatcap_oil_jkgc = self._calc_heat_capacity_oil_JkgC()
+        #self._thermal_conduct_oil_wmk = self._calc_thermal_conductivity_oil_WmK()
+
+    def __calc_gas_props(self, p_bar:float, t_C:float)->float:
+        # расчет свойств газа
+        # gas
+        self.p_atma = p_bar
+        self.t_C = t_C 
+        ppc_MPa, tpc_K = upvt.unf_pseudocritical_McCain_p_MPa_t_K(gamma_gas = self.gamma_gas, 
+                                                                  y_h2s = self.y_h2s, 
+                                                                  y_co2 = self.y_co2, 
+                                                                  y_n2 = self.y_n2)
+        p_MPaa = uc.bar_2_MPa(p_bar)
+        ppr = p_MPaa / ppc_MPa
+        t_K = uc.C_2_K(t_C)
+        tpr = t_K / tpc_K
+        self.p_gas_pc_MPa = ppc_MPa
+        self.t_gas_pc_K = tpc_K
+        self.p_gas_pr = ppr
+        self.t_gas_pr = tpr
+
+        self.z = upvt.unf_zfactor_SK(ppr=ppr, tpr=tpr, safe=True)
+        self.rho_gas_kgm3 = upvt.unf_rho_gas_z_kgm3(t_K = t_K, 
+                                                    p_MPaa = p_MPaa, 
+                                                    gamma_gas = self.gamma_gas, 
+                                                    z =self.z)
+
+        self.mu_gas_cP = upvt.unf_mu_gas_Lee_rho_cP(t_K = t_K, 
+                                                    p_MPaa = p_MPaa, 
+                                                    rho_gas_kgm3 = self.rho_gas_kgm3)
+        self.bg_m3m3 = upvt.unf_bg_gas_z_m3m3(t_K = t_K, 
+                                              p_MPaa = p_MPaa,
+                                              z =self.z)
+        #
+        #
+        #  TODO сжимаемость надо будет переделать чтобы тут расчитывалась через производные z 
+        # 
+        #self._compr_gas_1bar = uc.compr_1mpa_2_1bar(PVT.unf_compressibility_gas_Mattar_1MPa(p_MPaa, t_K,
+        #                                                                                    ppc_MPa, tpc_K))
+
+        # определим термодинамические свойства газа
+        self._heatcap_gas_jkgc = upvt.unf_heat_capacity_gas_Mahmood_Moshfeghian_JkgC(p_MPaa = p_MPaa, 
+                                                                                     t_K = t_K, 
+                                                                                     gamma_gas = self.gamma_gas)
+        self._thermal_conduct_gas_wmk = upvt.unf_thermal_conductivity_gas_methane_WmK(t_C = t_C)
+
+    def __calc_water_props(self, p_bar:float, t_C:float)->float:
+    
+        p_MPaa = uc.bar_2_MPa(p_bar)
+        t_K = uc.C_2_K(t_C)
+        # water
+        self.salinity_ppm = upvt.unf_salinity_from_gamma_water_ppm(gamma_water = self.gamma_wat)
+
+        self.bw_m3m3 = upvt.unf_bw_McCain_m3m3(t_K = t_K, 
+                                               p_MPaa = p_MPaa)
+        
+        self.rho_wat_kgm3 = upvt.unf_rho_water_bw_kgm3(gamma_w = self.gamma_wat,
+                                                       bw_m3m3=self.bw_m3m3)
+
+        self.mu_wat_cP = upvt.unf_mu_water_McCain_cP(t_K = t_K, 
+                                                     p_MPaa = p_MPaa, 
+                                                     s_ppm = self.salinity_ppm)
+
+        #self._compr_wat_1bar = uc.compr_1mpa_2_1bar(upvt.unf_compressibility_brine_Spivey_1MPa(t_K, p_MPaa, self.s_ppm,
+        #                                                                                      self._z, self.par_wat))
+        
+        #self._rsw_m3m3 = upvt.unf_gwr_brine_Spivey_m3m3(self.s_ppm, self._z)
+        # определим термодинамические свойства воды
+        #self._heatcap_wat_jkgc = upvt.unf_heat_capacity_water_IAPWS_JkgC(self.t_c)
+        #self._thermal_conduct_wat_wmk = upvt.unf_thermal_conductivity_water_IAPWS_WmC(self.t_c)
+        #self._thermal_expansion_wat_1c = upvt.unf_thermal_expansion_coefficient_water_IAPWS_1C(self.t_c)
+    
+
+
+    def calc(self, p_bar:float, t_C:float)->float:
         self.p_atma = p_bar
         self.t_C = t_C 
         # в расчете часто используются MPa и K - сконвертируем и сохраним соответствующие значения
@@ -260,7 +335,11 @@ class BlackOilStanding:
 
         # свойства газа 
 
+        self.__calc_gas_props(p_bar, t_C)
+
         # свойства воды
+
+        self.__calc_water_props(p_bar, t_C)
 
     #def _calc_compressibility_oil_1Mpa(self):
     #    return upvt.unf_compressibility_oil_VB_1Mpa(self._rs_m3m3, self.t_K, self.gamma_oil, self.pcal_MPaa, self.gamma_gas)
@@ -269,37 +348,7 @@ class BlackOilStanding:
     #    return upvt.unf_bo_saturated_Standing_m3m3(self.rsb_m3m3, self.gamma_gas, self.gamma_oil, self.t_K)
 
 """
-        # определим термодинамические свойства нефти
-        self._heatcap_oil_jkgc = self._calc_heat_capacity_oil_JkgC()
-        self._thermal_conduct_oil_wmk = self._calc_thermal_conductivity_oil_WmK()
 
-
-        # gas
-        tpc_K = PVT.unf_pseudocritical_temperature_K(self.gamma_gas, self.y_h2s, self.y_co2, self.y_n2)
-        ppc_MPa = PVT.unf_pseudocritical_pressure_MPa(self.gamma_gas, self.y_h2s, self.y_co2, self.y_n2)
-        self._z = PVT.unf_zfactor_DAK(p_MPaa, t_K, ppc_MPa, tpc_K)
-        self._mu_gas_cP = PVT.unf_gasviscosity_Lee_cP(t_K, p_MPaa, self._z, self.gamma_gas)
-        self._bg_m3m3 = PVT.unf_gas_fvf_m3m3(t_K, p_MPaa, self._z)
-        self._compr_gas_1bar = uc.compr_1mpa_2_1bar(PVT.unf_compressibility_gas_Mattar_1MPa(p_MPaa, t_K,
-                                                                                            ppc_MPa, tpc_K))
-        self._rho_gas_kgm3 = PVT.unf_gas_density_kgm3(t_K, p_MPaa, self.gamma_gas, self._z)
-
-        # определим термодинамические свойства газа
-        self._heatcap_gas_jkgc = PVT.unf_heat_capacity_gas_Mahmood_Moshfeghian_JkgC(p_MPaa, t_K, self.gamma_gas)
-        self._thermal_conduct_gas_wmk = PVT.unf_thermal_conductivity_gas_methane_WmK(self.t_c)
-
-        # water
-        # TODO НУЖНО проверить GWR
-        self._rho_wat_kgm3 = PVT.unf_density_brine_Spivey_kgm3(t_K, p_MPaa, self.s_ppm, self.par_wat)
-        self._compr_wat_1bar = uc.compr_1mpa_2_1bar(PVT.unf_compressibility_brine_Spivey_1MPa(t_K, p_MPaa, self.s_ppm,
-                                                                                              self._z, self.par_wat))
-        self._bw_m3m3 = PVT.unf_fvf_brine_Spivey_m3m3(t_K, p_MPaa, self.s_ppm)
-        self._mu_wat_cP = PVT.unf_viscosity_brine_MaoDuan_cP(t_K, p_MPaa, self.s_ppm)
-        self._rsw_m3m3 = PVT.unf_gwr_brine_Spivey_m3m3(self.s_ppm, self._z)
-        # определим термодинамические свойства воды
-        self._heatcap_wat_jkgc = PVT.unf_heat_capacity_water_IAPWS_JkgC(self.t_c)
-        self._thermal_conduct_wat_wmk = PVT.unf_thermal_conductivity_water_IAPWS_WmC(self.t_c)
-        self._thermal_expansion_wat_1c = PVT.unf_thermal_expansion_coefficient_water_IAPWS_1C(self.t_c)
 
         # определим свойства системы
         self._sigma_oil_gas_Nm = PVT.unf_surface_tension_go_Baker_Swerdloff_Nm(t_K, self.gamma_oil, p_MPaa)

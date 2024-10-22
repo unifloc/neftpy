@@ -482,7 +482,7 @@ def unf_bo_below_Glaso_m3m3(p_MPaa:float,
 ====================================================================================================
 """
 
-def unf_density_oil_Mccain(p_MPaa:float=1,
+def unf_rho_oil_Mccain_kgm3(p_MPaa:float=1,
                            t_K:float=300,  
                            pb_MPaa:float=10,
                            rs_m3m3:float=10,  
@@ -533,12 +533,11 @@ def unf_density_oil_Mccain(p_MPaa:float=1,
 
     ro_or = np.where(p_MPaa >= pb_MPaa, 
                      ro_or * np.exp(compr_1pa_2_1psi(co_1MPa / 1e6) * (p_psia - pb_psia)),
-                     ro_or)
-    ro_or = lbft3_2_kgm3(ro_or)
-    return ro_or
+                     ro_or)  
+    return  lbft3_2_kgm3(ro_or)
 
 
-def unf_density_oil_Standing(p_MPaa:float=1, 
+def unf_rho_oil_Standing_kgm3(p_MPaa:float=1, 
                              rs_m3m3:float=10, 
                              pb_MPaa:float=10, 
                              bo_m3m3:float=1.1, 

@@ -233,7 +233,7 @@ class PVToTestCase(unittest.TestCase):
         t_K = 350
         gamma_oil = 0.86
         gamma_gassp = 0
-        self.assertAlmostEqual(pvto.unf_density_oil_Mccain(p_MPaa, t_K, pb_MPaa, rs_m3m3, co_1MPa, gamma_oil, gamma_gas, gamma_gassp), 
+        self.assertAlmostEqual(pvto.unf_rho_oil_Mccain_kgm3(p_MPaa, t_K, pb_MPaa, rs_m3m3, co_1MPa, gamma_oil, gamma_gas, gamma_gassp), 
                                630.0536681794456, 
                                delta=0.0001)
 
@@ -246,7 +246,7 @@ class PVToTestCase(unittest.TestCase):
         t_K = 350
         gamma_oil = 0.86
         gamma_gassp = 0
-        self.assertTrue(np.allclose(pvto.unf_density_oil_Mccain(p_MPaa, t_K,pb_MPaa, rs_m3m3, co_1MPa, gamma_oil, gamma_gas, gamma_gassp),
+        self.assertTrue(np.allclose(pvto.unf_rho_oil_Mccain_kgm3(p_MPaa, t_K,pb_MPaa, rs_m3m3, co_1MPa, gamma_oil, gamma_gas, gamma_gassp),
                                [684.20874678, 684.97844157, 688.3460601,  692.43351253, 713.52125245, 735.25120966]) )
   
     def test_unf_density_oil_Standing(self):
@@ -257,7 +257,7 @@ class PVToTestCase(unittest.TestCase):
         bo_m3m3 = 1.1
         gamma_gas = 0.6
         gamma_oil = 0.86
-        self.assertAlmostEqual(pvto.unf_density_oil_Standing(p_MPaa, rs_m3m3, pb_MPaa, bo_m3m3, co_1MPa, gamma_oil, gamma_gas), 
+        self.assertAlmostEqual(pvto.unf_rho_oil_Standing_kgm3(p_MPaa, rs_m3m3, pb_MPaa, bo_m3m3, co_1MPa, gamma_oil, gamma_gas), 
                                948.863636, 
                                delta=0.0001)
         # значение изменено по сравнению с выводом унифлок vba на 0.13 из за корректировки плотности воздуха

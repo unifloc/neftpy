@@ -9,10 +9,25 @@ import scipy.optimize as opt
 
 # uPVT свойства для воды
 
+def unf_bw_McCain_m3m3(t_K:float, p_MPaa:float)->float:
+    """
+        FVF of brine by McCain
 
-def unf_density_brine_uniflocvba_kgm3(gamma_w:float, 
-                                      bw_m3m3:float
-                                      )->float:
+        https://petrowiki.org/Produced_water_formation_volume_factor
+
+    :param t_K: temperature, K
+    :param p_MPaa: pressure, MPaa
+    :return: formation volume factor, m3/m3
+    """
+    t_f = K_2_F(t_K)
+    p_psi = bar_2_psi(p_MPaa * 10)
+    dvwp = -1.95301e-9 * p_psi * t_f - 1.72834e-13 * p_psi ** 2 * t_f - 3.58922e-7 * p_psi - 2.25341e-10 * p_psi ** 2
+    dvwt = -1.0001e-2 + 1.33391e-4 * t_f + 5.50654e-7 * t_f ** 2
+    return  (1 + dvwp) * (1 + dvwt)
+
+def unf_rho_water_bw_kgm3(gamma_w:float, 
+                          bw_m3m3:float
+                          )->float:
     """
         Equation from UniflocVBA
 
@@ -23,8 +38,54 @@ def unf_density_brine_uniflocvba_kgm3(gamma_w:float,
     rho_wat_rc_kgm3 = 1000 * gamma_w / bw_m3m3
     return rho_wat_rc_kgm3
 
+def unf_mu_water_McCain_cP(t_K:float, p_MPaa:float, s_ppm:float)->float:  
+    """
+        McCain correlation for brine(water) viscosity
 
-def unf_density_brine_Spivey_kgm3(t_K, p_MPaa:float, 
+    :param t_K: temperature, K
+    :param p_MPaa: pressure, MPaa
+    :param s_ppm: salinity, ppm
+    :return: viscosity, cP
+
+    ref 1 McCain, W.D. Jr.: McCain, W.D. Jr. 1990. The Properties of Petroleum Fluids, second edition. Tulsa,
+    Oklahoma: PennWell Books.
+
+    ref 2 https://petrowiki.org/Produced_water_properties#cite_note-r1-1
+    """
+
+    wpTDS = s_ppm / 10000
+
+    a = 109.574 - 8.40564 * wpTDS + 0.313314 * wpTDS ** 2 + 0.00872213 * wpTDS ** 3
+    b = -1.12166 + 0.0263951 * wpTDS - 0.000679461 * wpTDS ** 2 - 5.47119e-5 * wpTDS ** 3 + 1.55586e-6 * wpTDS ** 4
+
+    visc = a * K_2_F(t_K) ** b
+    p_psi = MPa_2_psi(p_MPaa)
+    return visc * (0.9994 + 4.0295e-5 * p_psi + 3.1062e-9 * p_psi ** 2)
+
+def unf_gamma_water_from_salinity_m3m3(salinity_ppm: float) -> float:
+    """
+    Water density at standard conditions
+    """
+    wpTDS = salinity_ppm / 10000
+    return 0.0160185 * (62.368 + 0.438603 * wpTDS + 0.00160074 * wpTDS ** 2)
+
+
+def unf_salinity_from_gamma_water_ppm(gamma_water: float) -> float:
+    """
+    Salinity in ppm from water density at standard conditions (inverse of unf_gamma_water_from_salinity_m3m3)
+    """
+    result = (624.711071129603 * gamma_water / 0.0160185 - 20192.9595437054) ** 0.5 - 137.000074965329
+    return result * 10000
+
+
+# =========================================================
+# следующие функции требует проверки и разбирательств
+# =========================================================
+
+
+
+def unf_density_brine_Spivey_kgm3(t_K:float, 
+                                  p_MPaa:float, 
                                   s_ppm:float, 
                                   par:int=1
                                   )->float:
@@ -235,24 +296,6 @@ def unf_compressibility_brine_Spivey_1MPa(t_K, p_MPaa, s_ppm, z=1.0, par=1):
     return c_1MPa
 
 
-def unf_fvf_brine_McCain_m3m3(t_K, p_MPaa):
-    """
-        FVF of brine by McCain
-
-        https://petrowiki.org/Produced_water_formation_volume_factor
-
-    :param t_K: temperature, K
-    :param p_MPaa: pressure, MPaa
-    :return: formation volume factor, m3/m3
-    """
-    t_f = K_2_F(t_K)
-    p_psi = bar_2_psi(p_MPaa * 10)
-    dvwp = -1.95301e-9 * p_psi * t_f - 1.72834e-13 * p_psi ** 2 * t_f - 3.58922e-7 * p_psi - 2.25341e-10 * p_psi ** 2
-    dvwt = -1.0001e-2 + 1.33391e-4 * t_f + 5.50654e-7 * t_f ** 2
-    fvf_brine_McCain = (1 + dvwp) * (1 + dvwt)
-    return fvf_brine_McCain
-
-
 def unf_fvf_brine_Spivey_m3m3(t_K, p_MPaa, s_ppm):  # TODO check
     """
         Modified Spivey et al. correlation for brine(water) formation volume factor (2009)
@@ -436,32 +479,6 @@ def unf_gwr_brine_Spivey_m3m3(s_ppm, z):  # TODO check
     gwr = m_ch4_b * vm_ch4_g_sc / ((1000 + m * 58.4428) * v_b0_sc)
     return gwr
 
-
-def unf_viscosity_brine_McCain_cp(t_K, p_MPaa, s_ppm):  #TODO check
-    """
-        McCain correlation for brine(water) viscosity
-
-    :param t_K: temperature, K
-    :param p_MPaa: pressure, MPaa
-    :param s_ppm: salinity, ppm
-    :return: viscosity, cP
-
-    ref 1 McCain, W.D. Jr.: McCain, W.D. Jr. 1990. The Properties of Petroleum Fluids, second edition. Tulsa,
-    Oklahoma: PennWell Books.
-
-    ref 2 https://petrowiki.org/Produced_water_properties#cite_note-r1-1
-    """
-
-    wpTDS = s_ppm / 10000
-
-    a = 109.574 - 8.40564 * wpTDS + 0.313314 * wpTDS ** 2 + 0.00872213 * wpTDS ** 3
-    b = -1.12166 + 0.0263951 * wpTDS - 0.000679461 * wpTDS ** 2 - 5.47119e-5 * wpTDS ** 3 + 1.55586 * 10 ** (
-        -6) * wpTDS ** 4
-
-    visc = a * (1.8 * t_K - 460) ** b
-    p_psi = bar_2_psi(p_MPaa * 10)
-    viscosity_cp = visc * (0.9994 + 4.0295e-5 * p_psi + 3.1062e-9 * p_psi ** 2)
-    return viscosity_cp
 
 
 def unf_viscosity_brine_MaoDuan_cP(t_K, p_MPaa, s_ppm):  #TODO check
@@ -681,56 +698,3 @@ def unf_surface_tension_Baker_Sverdloff_vba_nm(p_atma, t_C, gamma_o_):
     ST_watgas_dyncm_ = STw
     return [dyncm_2_Nm(ST_oilgas_dyncm_), dyncm_2_Nm(ST_watgas_dyncm_)]
 
-
-def coef_mt(t_k, rho_deadoil_kgm3, gamma_gas):
-    return 1 + 0.029 * (t_k - 293) * (rho_deadoil_kgm3 * gamma_gase-3 - 0.7966)
-
-
-def coef_dt(t_k, rho_deadoil_kgm3, gamma_gas):
-    return 10 ** (-3) * rho_deadoil_kgm3 * gamma_gas * (4.5 - 0.00305 * (t_k - 293)) - 4.785
-
-
-def coef_rp(p_mpa, pb_mpa):
-    return (1 + np.log10(p_mpa)) / (1 + np.log10(pb_mpa)) - 1
-
-
-def unf_calc_gas_liberated_and_dissolved(t_k, rho_deadoil_kgm3, gamma_oil, gamma_gas, p_mpa, pb_mpa, rsb_m3m3, return_m3m3=True):
-    rsb_m3t = rsb_m3m3 / gamma_oil
-    rp = coef_rp(p_mpa, pb_mpa)
-    #print(f"rp={rp}")
-    dt = coef_dt(t_k, rho_deadoil_kgm3, gamma_gas)
-    #print(f"dt={dt}")
-    mt = coef_mt(t_k, rho_deadoil_kgm3, gamma_gas)
-    #print(f"mt={mt}")
-    gas_liberated_m3t = rsb_m3t * rp * mt * (dt * (1 + rp) - 1)
-    gas_dissolved_m3t = rsb_m3t * mt - gas_liberated_m3t
-
-    if p_mpa >= pb_mpa:
-        if return_m3m3:
-            return 0, rsb_m3t * mt * rho_deadoil_kgm3 / 1000
-        else:
-            return 0, rsb_m3t * mt
-
-    if return_m3m3:
-        return gas_liberated_m3t * rho_deadoil_kgm3 / 1000, gas_dissolved_m3t * rho_deadoil_kgm3 / 1000
-        # return gas_liberated_m3t, gas_dissolved_m3t
-    else:
-        return gas_liberated_m3t, gas_dissolved_m3t
-
-
-def calc_gas_for_fsolve(rsb_m3m3_real, t_k, rho_deadoil_kgm3, gamma_oil, gamma_gas, p_mpa, pb_mpa, rsb_m3m3, return_m3m3=True):
-    gas_dissolved_m3m3 = unf_calc_gas_liberated_and_dissolved(t_k, rho_deadoil_kgm3,  gamma_oil, gamma_gas, pb_mpa, pb_mpa, rsb_m3m3_real, return_m3m3)[1]
-    return (gas_dissolved_m3m3 - rsb_m3m3) ** 2
-
-
-def calc_gas_with_fsolve(t_k, rho_deadoil_kgm3, gamma_oil,  gamma_gas, p_mpa, pb_mpa, rsb_m3m3, return_m3m3=True):
-    method = 'excitingmixing'
-    answer = opt.root(calc_gas_for_fsolve, rsb_m3m3, args=(t_k, rho_deadoil_kgm3,gamma_oil, gamma_gas,
-                                                          pb_mpa, pb_mpa, rsb_m3m3, return_m3m3), tol=0.01)
-    answer = answer.x[0]
-    return unf_calc_gas_liberated_and_dissolved(t_k, rho_deadoil_kgm3,gamma_oil, gamma_gas, p_mpa, pb_mpa, answer, return_m3m3)
-
-def calc_pb(pb_mpa, rho_deadoil_kgm3, rsb_m3m3, tres_k, t_k):
-    gi = rsb_m3m3 * 10**3 * 273 / 293 / rho_deadoil_kgm3
-    pbt_mpa = pb_mpa - (tres_k - t_k) / (9.157 + 701.8 / (gi * (0.4 - 0.8* 0.08)))
-    return pbt_mpa

@@ -26,7 +26,7 @@ class PVTwTestCase(unittest.TestCase):
     def test_unf_density_brine_uniflocvba_kgm3(self):
         gamma_w = 1
         bw_m3m3 = 1.1
-        self.assertAlmostEqual(pvtw.unf_density_brine_uniflocvba_kgm3(gamma_w, bw_m3m3), 909.090909090909, delta=0.0001)
+        self.assertAlmostEqual(pvtw.unf_rho_water_bw_kgm3(gamma_w, bw_m3m3), 909.090909090909, delta=0.0001)
 
 
     def test_unf_fvf_brine_McCain_m3m3(self):
@@ -45,7 +45,7 @@ class PVTwTestCase(unittest.TestCase):
         t_K = 350
         p_MPaa = 20
         s_ppm = 10000
-        self.assertAlmostEqual(pvtw.unf_viscosity_brine_McCain_cp(t_K, p_MPaa, s_ppm), 0.4165673950441691, delta=0.0001)
+        self.assertAlmostEqual(pvtw.unf_mu_water_McCain_cP(t_K, p_MPaa, s_ppm), 0.4165673950441691, delta=0.0001)
 
     def test_unf_viscosity_brine_MaoDuan_cP(self):
         t_K = 350

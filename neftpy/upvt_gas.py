@@ -19,10 +19,10 @@ import json
 """
 
 def unf_pseudocritical_McCain_p_MPa_t_K(gamma_gas:float, 
-                                 y_h2s:float=0.0, 
-                                 y_co2:float=0.0, 
-                                 y_n2:float=0.0,
-                                 )->float:
+                                        y_h2s:float=0.0, 
+                                        y_co2:float=0.0, 
+                                        y_n2:float=0.0,
+                                       )->float:
     """
     Correlation for pseudocritical pressure and temperature 
     taking into account the presense of non-hydrocarbon gases
@@ -653,17 +653,16 @@ def unf_mu_gas_Lee_rho_cP(t_K: float,
     t_R = K_2_R(t_K)
 
     # Новая корреляция Lee
-    # m = 28.9612403 * gamma_gas  # молярная масса газа
-    # a = ((9.379 + 0.01607 * m) * t_r ** 1.5) / (209.2 + 19.26 * m + t_r)
-    # b = 3.448 + 986.4 / t_r + 0.01009 * gamma_gas * 28.966
-    # c = 2.447 - 0.2224 * b
-    # Старая корреляция Lee как в Pipesim
     m = 28.9612403 * gamma_gas  # молярная масса газа
-    a = (7.77 + 0.183 * gamma_gas) * t_R**1.5 / (122.4 + 373.6 * gamma_gas + t_R)
-    b = 2.57 + 1914.5 / t_R + 0.275 * gamma_gas
-    c = 1.11 + 0.04 * b
-    gas_viscosity = 1e-4 * a * np.exp(b * (rho_gas_kgm3 / 1000) ** c)
-    return gas_viscosity
+    a = ((9.379 + 0.01607 * m) * t_R ** 1.5) / (209.2 + 19.26 * m + t_R)
+    b = 3.448 + 986.4 / t_R + 0.01009 * gamma_gas * 28.966
+    c = 2.447 - 0.2224 * b
+    # Старая корреляция Lee как в Pipesim
+    # m = 28.9612403 * gamma_gas  # молярная масса газа
+    # a = (7.77 + 0.183 * gamma_gas) * t_R**1.5 / (122.4 + 373.6 * gamma_gas + t_R)
+    # b = 2.57 + 1914.5 / t_R + 0.275 * gamma_gas
+    # c = 1.11 + 0.04 * b
+    return 1e-4 * a * np.exp(b * (rho_gas_kgm3 * 1e-3) ** c)
 
 """ 
 ====================================================================================================
