@@ -160,23 +160,22 @@ def unf_rs_Standing_m3m3(p_MPaa:float=1,
     может считать в случае если нет давления насыщения и газосодержания при давлении насыщения, корреляция не точная
     """
 
-    yg = lambda t_K, gamma_oil: RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil
+    yg = RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil
     
     if calc_drs_dp:
         drs_dp = np.where(pb_MPaa * rsb_m3m3 == 0, 
-                            gamma_gas * (1.92 / 10**yg(t_K, gamma_oil)) ** 1.204 * 1.204 * p_MPaa ^ 0.204, 
+                            gamma_gas * (1.92 / 10**yg) ** 1.204 * 1.204 * p_MPaa**0.204, 
                             np.where(p_MPaa < pb_MPaa, 
                                     rsb_m3m3 * np.divide(1, pb_MPaa, 
                                                         where=pb_MPaa!=0
-                                                        ) ** 1.204 * p_MPaa ^ 0.204,
+                                                        ) ** 1.204 * p_MPaa ** 0.204,
                                     0
                                     )
                             )
         return drs_dp
-        # TODO сделать тест на расчет производной
     else:
         rs_m3m3 = np.where(pb_MPaa * rsb_m3m3 == 0, 
-                            gamma_gas * (1.92 * p_MPaa / 10 ** yg(t_K, gamma_oil)) ** 1.204, 
+                            gamma_gas * (1.92 * p_MPaa / 10 ** yg) ** 1.204, 
                             np.where(p_MPaa < pb_MPaa, 
                                     rsb_m3m3 * np.divide(p_MPaa, pb_MPaa, 
                                                         where=pb_MPaa!=0
@@ -269,7 +268,6 @@ def unf_rs_Velarde_m3m3(p_MPaa:float=1,
     J. VELARDE, T.A. BLASINGAME Texas A&M University, W.D. MCCAIN, JR. S.A. Holditch & Associates, Inc 1999
 
     """
-    # TODO расширить тесты для разных диапазонов параметров
     pr = np.where(pb_MPaa > P_SC_MPa, 
                   MPa_2_psig(p_MPaa)/(MPa_2_psig(pb_MPaa)), 
                   0
@@ -298,7 +296,7 @@ def unf_rs_Velarde_m3m3(p_MPaa:float=1,
                                             ) 
                                     )
                         )
-
+    #TODO rnt можно добавить тут расчет производной - в vba версии есть
 
     return rs_m3m3
 

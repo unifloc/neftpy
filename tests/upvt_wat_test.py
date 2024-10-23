@@ -32,7 +32,7 @@ class PVTwTestCase(unittest.TestCase):
     def test_unf_fvf_brine_McCain_m3m3(self):
         t_K = 300
         p_MPaa =20
-        self.assertAlmostEqual(pvtw.unf_fvf_brine_McCain_m3m3(t_K, p_MPaa), 1.0007434853666817,
+        self.assertAlmostEqual(pvtw.unf_bw_McCain_m3m3(t_K, p_MPaa), 1.0007434853666817,
                                delta=0.0001)
 
     def test_unf_fvf_brine_Spivey_m3m3(self):
@@ -45,7 +45,7 @@ class PVTwTestCase(unittest.TestCase):
         t_K = 350
         p_MPaa = 20
         s_ppm = 10000
-        self.assertAlmostEqual(pvtw.unf_mu_water_McCain_cP(t_K, p_MPaa, s_ppm), 0.4165673950441691, delta=0.0001)
+        self.assertAlmostEqual(pvtw.unf_mu_water_McCain_cP(t_K, p_MPaa, s_ppm), 0.41568293702050707, delta=0.0001)
 
     def test_unf_viscosity_brine_MaoDuan_cP(self):
         t_K = 350

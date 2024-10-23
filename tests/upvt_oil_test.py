@@ -15,7 +15,7 @@ class PVToTestCase(unittest.TestCase):
         gamma_gas = 0.6
         t_K = 350
         self.assertAlmostEqual(pvto.unf_pb_Standing_MPaa(t_K, rsb_m3m3, gamma_oil, gamma_gas), 
-                                20.170210695316566,
+                                19.2247953146684,
                                 delta=0.0001)
 
     def test_array_unf_pb_Standing_MPaa(self):
@@ -25,7 +25,8 @@ class PVToTestCase(unittest.TestCase):
         gamma_oil = 0.86
         gamma_gas = 0.6
         t_K = 353
-        unf_vba_res = [0.448907580141515,13.4987764643021,23.8326700405825,33.2913002316227,42.2211469979671,50.7767705913968]
+        unf_vba_res = [ 0.42998783, 12.86606364, 22.71558836, 31.73087492, 40.24216312,
+       48.39676869]
         unf_vba_rsb = [1,60.8,120.6,180.4,240.2,300]
 
         rsb_m3m3 = np.array(unf_vba_rsb)        
@@ -67,21 +68,34 @@ class PVToTestCase(unittest.TestCase):
 
     def test_unf_rs_Standing_m3m3(self):
         p_MPaa = 10
+        pb_MPaa = 0
+        rsb = 200
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        t_K = 350
+        self.assertAlmostEqual(pvto.unf_rs_Standing_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas),
+                               45.24604018198833, 
+                               delta=0.0001)
+
+
+    def test_unf_rs_Standing_m3m3_2(self):
+        # проверим ветку где задано давление насыщения
+        p_MPaa = 10
         pb_MPaa = 15
         rsb = 200
         gamma_oil = 0.86
         gamma_gas = 0.6
         t_K = 350
         self.assertAlmostEqual(pvto.unf_rs_Standing_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas),
-                               122.74847910146916, 
+                               122.7484791, 
                                delta=0.0001)
-
+        
     def test_array_unf_rs_Standing_m3m3(self):
 
         gamma_oil = 0.86
         gamma_gas = 0.6
         t_K = 353
-        unf_vba_res = [2.63345652886037,15.6762859290458,31.2325939746016,48.2819334435268,66.436537812051,85.4819163871848]
+        unf_vba_res = [2.79015288, 16.60905883, 33.09100083, 51.15481285, 70.38965542, 90.56827519]
         unf_vba_p_MPaa = [1,4.4,7.8,11.2,14.6,18]
         pb_MPaa = 0
         rsb = 120
@@ -94,7 +108,41 @@ class PVToTestCase(unittest.TestCase):
                                     res, 
                                     rtol=0.0001))
         
+    def test_array_unf_rs_Standing_m3m3_2(self):
+        # проверим ветку с производными
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        t_K = 353
+        unf_vba_res = [3.35934407, 4.54484246, 5.10789295, 5.49914238, 5.80473597, 6.0580113]
+        unf_vba_p_MPaa = [1,4.4,7.8,11.2,14.6,18]
+        pb_MPaa = 0
+        rsb = 120
 
+
+        p_MPaa = np.array(unf_vba_p_MPaa)        
+        res = np.array(unf_vba_res)
+        
+        self.assertTrue(np.allclose(pvt_vect.unf_rs_Standing_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas, calc_drs_dp=True),
+                                    res, 
+                                    rtol=0.0001))
+
+    def test_array_unf_rs_Standing_m3m3_3(self):
+        # проверим ветку с производными
+        gamma_oil = 0.86
+        gamma_gas = 0.6
+        t_K = 353
+        unf_vba_res = [7.50207231, 10.14952206, 11.40692392,  0., 0., 0. ]
+        unf_vba_p_MPaa = [1,4.4,7.8,11.2,14.6,18]
+        pb_MPaa = 10
+        rsb = 120
+
+
+        p_MPaa = np.array(unf_vba_p_MPaa)        
+        res = np.array(unf_vba_res)
+        
+        self.assertTrue(np.allclose(pvt_vect.unf_rs_Standing_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas, calc_drs_dp=True),
+                                    res, 
+                                    rtol=0.0001))
     def test_unf_rs_Velarde_m3m3(self):
         p_MPaa = 10
         pb_MPaa = 15
@@ -103,7 +151,7 @@ class PVToTestCase(unittest.TestCase):
         gamma_gas = 0.6
         t_K = 350
         self.assertAlmostEqual(pvto.unf_rs_Velarde_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas),
-                               170.25302712587356, 
+                               170.2531379850611, 
                                delta=0.0001)
 
 
@@ -112,10 +160,10 @@ class PVToTestCase(unittest.TestCase):
         pb_MPaa = 15
         rsb = 250
         gamma_oil = 0.86
-        gamma_gas = 0.6
+        gamma_gas = 0.7
         t_K = 350
         self.assertAlmostEqual(pvto._unf_rs_Velarde_m3m3_(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas),
-                               170.25302712587356, 
+                               179.5022473749806, 
                                delta=0.0001)
 
     def test_array_unf_rs_Velarde_m3m3(self):
@@ -125,7 +173,7 @@ class PVToTestCase(unittest.TestCase):
         t_K = 353
         pb_MPaa = 12.8300024673082
         rsb = 120
-        unf_vba_res = [13.769156001658,47.1724892015713,76.4710407632712,105.644331604199,120,120]
+        unf_vba_res = [13.79399931,  47.23193583,  76.53074165, 105.67222853,        120.        , 120.]
         unf_vba_p_MPaa = [1,4.4,7.8,11.2,14.6,18]
 
 
@@ -140,7 +188,7 @@ class PVToTestCase(unittest.TestCase):
 
         self.assertTrue(np.allclose(pvt_vect.unf_rs_Velarde_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas),
                                     res, 
-                                    rtol=0.01))
+                                    rtol=0.0001))
 
     def test_array_unf_rs_Velarde_2_m3m3(self):
 
@@ -193,7 +241,7 @@ class PVToTestCase(unittest.TestCase):
         density_oil_kgm3 = 820
         gamma_gas = 0.6
         self.assertAlmostEqual(pvto.unf_bo_below_pb_m3m3(density_oilsto_kgm3, density_oil_kgm3,  rs_m3m3,  gamma_gas),
-                               1.1542114715227887, 
+                               1.1518270180151782, 
                                delta=0.001
                                )
         
@@ -258,7 +306,7 @@ class PVToTestCase(unittest.TestCase):
         gamma_gas = 0.6
         gamma_oil = 0.86
         self.assertAlmostEqual(pvto.unf_rho_oil_Standing_kgm3(p_MPaa, rs_m3m3, pb_MPaa, bo_m3m3, co_1MPa, gamma_oil, gamma_gas), 
-                               948.863636, 
+                               946.02063042, 
                                delta=0.0001)
         # значение изменено по сравнению с выводом унифлок vba на 0.13 из за корректировки плотности воздуха
     

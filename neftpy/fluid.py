@@ -12,6 +12,8 @@ import scipy.optimize as opt
 class Feed:
     """
     свойства потока флюидов
+    поток флюидов определяет PVT свойства всех флюидов - нефти, газа и воды
+    а также их расходные характеристики - дебиты, доли флюида в потоке и прочее
     """
     def __init__(self):
         self.fluid = BlackOilStanding()
@@ -25,17 +27,28 @@ class Feed:
         self.fluid.calc(p_bar=p_atma, t_C=t_C)
 
     def fw_fr(self):
+        """
+        обводненность в долях единиц
+        """
         return self.fw_perc / 100
 
     def q_oil_sm3day(self):
+        """
+        дебит нефти приведенный к стандартным условиях
+        """
         return self.q_liq_sm3day * (1 - self.fw_fr)
 
     def q_gas_sm3day(self):
+        """
+        дебит газа приведенный к стандартным условиях
+        учитывает весь газ потока - как свободный, так и растворенный в нефти
+        """
         return self.q_oil_sm3day * self.rp_m3m3 + self.q_gas_free_sm3day  
     
     def q_gas_insitu_sm3day(self):
         """ 
-        расход газа в заданных термобарических условиях приведенный к стандартным условиям
+        расход свободного газа в заданных термобарических условиях приведенный к стандартным условиям
+        без учета растворенного в нефти газа
         """
         _q_gas_insitu_sm3day = self.q_gas_sm3day - self.fluid.rs_m3m3 * self.q_oil_sm3day
         return np.where(_q_gas_insitu_sm3day < 0,
@@ -43,9 +56,15 @@ class Feed:
                         _q_gas_insitu_sm3day )
 
     def q_gas_rc_m3day(self):
+        """
+        расход свободного газа приведенный к расчетным термобарическим условиям
+        """
         return self.q_gas_insitu_sm3day * self.fluid.b_gas_m3m3
     
     def q_water_sm3day(self):
+        """
+        расход воды, приведенные к стандартным условиям
+        """
         return self.q_liq_sm3day * self.fw_fr
 
 
@@ -316,6 +335,9 @@ class BlackOilStanding:
 
 
     def calc(self, p_bar:float, t_C:float)->float:
+        """
+        расчет всех свойств флюида
+        """
         self.p_atma = p_bar
         self.t_C = t_C 
         # в расчете часто используются MPa и K - сконвертируем и сохраним соответствующие значения
@@ -347,11 +369,11 @@ class BlackOilStanding:
     #def _calc_b_oilb_m3m3(self):
     #    return upvt.unf_bo_saturated_Standing_m3m3(self.rsb_m3m3, self.gamma_gas, self.gamma_oil, self.t_K)
 
-"""
+    """
 
 
         # определим свойства системы
         self._sigma_oil_gas_Nm = PVT.unf_surface_tension_go_Baker_Swerdloff_Nm(t_K, self.gamma_oil, p_MPaa)
         self._sigma_wat_gas_Nm = PVT.unf_surface_tension_gw_Sutton_Nm(self.rho_wat_kgm3, self.rho_gas_kgm3, self.t_c)
         return 1
-"""
+    """
