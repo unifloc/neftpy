@@ -26,25 +26,54 @@ class Feed:
     def calc(self, p_atma, t_C):
         self.fluid.calc(p_bar=p_atma, t_C=t_C)
 
+    # ------------- обводненность ------------------
+    @property 
     def fw_fr(self):
         """
         обводненность в долях единиц
         """
         return self.fw_perc / 100
 
+    @fw_fr.setter
+    def fw_fr(self, value:float):
+        """
+        установка значения обводненности
+        """
+        self.fw_perc = np.clip(value, 0, 1) * 100
+
+
+    # ------------- дебит нефти --------------------
+    @property
     def q_oil_sm3day(self):
         """
         дебит нефти приведенный к стандартным условиях
         """
         return self.q_liq_sm3day * (1 - self.fw_fr)
 
+    @property
+    def q_oil_m3day(self):
+        """
+        дебит нефти в рабочих условиях
+        """
+        return self.q_oil_sm3day * self.fluid.b_oil_m3m3
+
+    @property
+    def q_oil_kgday(self):
+        """
+        массовый расход нефти
+        """
+        return self.q_oil_m3day * self.fluid.rho_oil_kgm3
+
+    # ------------ дебит газв ------------------------
+    @property
     def q_gas_sm3day(self):
         """
         дебит газа приведенный к стандартным условиях
         учитывает весь газ потока - как свободный, так и растворенный в нефти
         """
         return self.q_oil_sm3day * self.rp_m3m3 + self.q_gas_free_sm3day  
-    
+
+    @property   
     def q_gas_insitu_sm3day(self):
         """ 
         расход свободного газа в заданных термобарических условиях приведенный к стандартным условиям
@@ -54,22 +83,43 @@ class Feed:
         return np.where(_q_gas_insitu_sm3day < 0,
                         0,
                         _q_gas_insitu_sm3day )
-
-    def q_gas_rc_m3day(self):
+ 
+    @property
+    def q_gas_m3day(self):
         """
         расход свободного газа приведенный к расчетным термобарическим условиям
         """
         return self.q_gas_insitu_sm3day * self.fluid.b_gas_m3m3
     
+    # ------------ дебит воды ------------------------
+    @property
     def q_water_sm3day(self):
         """
         расход воды, приведенные к стандартным условиям
         """
         return self.q_liq_sm3day * self.fw_fr
 
+    @property
+    def q_water_m3day(self):
+        """
+        расход воды, приведенные к стандартным условиям
+        """
+        return self.q_water_sm3day * self.fluid.rho_wat_kgm3
 
+    # ------------ дебит жидкости ----------------------
+    @property
+    def q_liq_m3day(self):
+        return self.q_oil_m3day + self.q_water_m3day
+    
+    # ------------ дебит смести ------------------------
+    @property
+    def q_mix_m3day(self):
+        return self.q_oil_m3day + self.q_water_m3day + self.q_gas_m3day
+
+    # ------------ доля газа в потоке ------------------------
+    @property
     def gas_fraction(self):
-        pass
+        return self.q_gas_m3day / (self.q_gas_m3day + self.q_oil_m3day + self.q_water_m3day)
 
 
 
