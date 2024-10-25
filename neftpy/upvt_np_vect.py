@@ -149,8 +149,8 @@ unf_mu_gas_Lee_z_cP = pvtg.unf_mu_gas_Lee_z_cP
 unf_mu_gas_Lee_z_cP_ = pvtg.unf_mu_gas_Lee_z_cP_
 unf_mu_gas_Lee_rho_cP = pvtg.unf_mu_gas_Lee_rho_cP
 
-unf_bg_gas_z_m3m3 = pvtg.unf_bg_gas_z_m3m3
-unf_bg_gas_m3m3 = pvtg.unf_bg_gas_m3m3
+unf_b_gas_z_m3m3 = pvtg.unf_b_gas_z_m3m3
+unf_b_gas_m3m3 = pvtg.unf_b_gas_m3m3
 
 unf_rho_gas_z_kgm3 = pvtg.unf_rho_gas_z_kgm3
 unf_rho_gas_kgm3 = pvtg.unf_rho_gas_kgm3
@@ -174,7 +174,7 @@ unf_gas_isotermal_compressibility_1MPa = np.vectorize(pvtg.unf_gas_isotermal_com
 ====================================================================================================
 """
 
-unf_bw_McCain_m3m3 = pvtw.unf_bw_McCain_m3m3
+unf_b_water_McCain_m3m3 = pvtw.unf_b_water_McCain_m3m3
 
 unf_rho_water_bw_kgm3 = pvtw.unf_rho_water_bw_kgm3
 

@@ -104,7 +104,7 @@ class Feed:
         """
         расход воды, приведенные к стандартным условиям
         """
-        return self.q_water_sm3day * self.fluid._rho_wat_kgm3
+        return self.q_water_sm3day * self.fluid._rho_water_kgm3
 
     # ------------ свойства жидкости (вода+нефть) ----------------------
     @property
@@ -263,41 +263,151 @@ class BlackOilStanding:
     
     @property
     def pt_atma_C(self):
+        """
+        давление и температура как кортеж, только для чтения
+        """
         return (self._p_atma, self._t_C)
 
     @property
     def b_oil_m3m3(self):
+        """
+        объемный коэффициент нефти при расчетных условиях, м3/м3, только для чтения
+        """
         return self._b_oil_m3m3
 
     @property
+    def b_gas_m3m3(self):
+        """
+        объемный коэффициент газа при расчетных условиях, м3/м3, только для чтения
+        """
+        return self._b_gas_m3m3
+    
+    @property
+    def b_water_m3m3(self):
+        """
+        объемный коэффициент воды при расчетных условиях, м3/м3, только для чтения
+        """
+        return self._b_water_m3m3
+    
+    @property
     def rs_m3m3(self):
+        """
+        газосодержение в нефти при расчетных условиях, м3/м3, только для чтения
+        """
         return self._rs_m3m3
     
     @property
     def rsb_m3m3(self):
+        """
+        газосодержание при давлении насыщения, м3/м3, исходный параметр
+        """
         return self._rsb_m3m3
     
     @property
     def pb_atma(self):
+        """
+        давление насыщения, атма, при заданной температуре пласта tb_C
+        """
         return self._pb_atma
     
     @property
     def pb_at_tcalc_atma(self):
+        """
+        давление насыщения, атма, при расчетной температуре t_C
+        """
         return self._pb_at_tcalc_atma
     
     @property
     def rho_gas_kgm3(self):
+        """
+        плотность газа, кг/м3, при расчетных условиях, только для чтения
+        """
         return self._rho_gas_kgm3
 
     @property
     def rho_oil_kgm3(self):
+        """
+        плотность нефти, кг/м3, при расчетных условиях, только для чтения
+        """
         return self._rho_oil_kgm3
     
     @property
-    def rho_wat_kgm3(self):
-        return self._rho_wat_kgm3
+    def rho_water_kgm3(self):
+        """
+        плотность воды, кг/м3, при расчетных условиях, только для чтения
+        """
+        return self._rho_water_kgm3
+
+    @property
+    def mu_oil_cP(self):
+        """
+        вязкость нефти, сП, при расчетных условиях, только для чтения
+        """
+        return self._mu_oil_cP
+
+    @property
+    def mu_dead_oil_cP(self):
+        """
+        вязкость дегаризированной нефти, сП, при стандартных условиях, только для чтения
+        """
+        return self._mu_dead_oil_cP
+
+    @property
+    def mu_oilb_cP(self):
+        """
+        вязкость нефти при давлении насыщения и температуре давления насыщения, сП, только для чтения
+        """
+        return self._mu_oilb_cP
+
+    @property
+    def mu_gas_cP(self):
+        """
+        вязкость газа, сП, только для чтения
+        """
+        return self._mu_gas_cP
+
+    @property
+    def mu_water_cP(self):
+        """
+        вязкость воды, сП, только для чтения
+        """
+        return self._mu_water_cP
 
 
+    @property
+    def p_gas_pc_MPa (self):
+        """
+        псевдо критическое давление газа, МПа, только для чтения
+        """
+        return self._p_gas_pc_MPa 
+
+    @property
+    def t_gas_pc_K (self):
+        """
+        псевдо критическая температура газа, К, только для чтения
+        """
+        return self._t_gas_pc_K 
+    
+    @property
+    def p_gas_pr(self):
+        """
+        приведенное давление газа - отношение расчетного к псевдо-критическому, безразмерное, только для чтения
+        """
+        return self._p_gas_pr 
+    
+    @property
+    def t_gas_pr (self):
+        """
+        приведенная температура газа - отношение расчетного к псевдо-критическому, безразмерное, только для чтения
+        """
+        return self._t_gas_pr 
+
+    @property
+    def salinity_water_ppm (self):
+        """
+        соленость воды, ppm
+        """
+        return self._salinity_ppm 
 
     def set_calibration_param(self,
                               pb_calibr_atma=-1., 
@@ -375,7 +485,7 @@ class BlackOilStanding:
                                                        gamma_oil = self._gamma_oil, 
                                                        p_MPaa = p_effective_MPaa, 
                                                        gamma_gas = self._gamma_gas)
-        self.compr_oil_1bar = uc.compr_1mpa_2_1bar(co_1MPa)
+        self._compr_oil_1bar = uc.compr_1mpa_2_1bar(co_1MPa)
         b_oil_m3m3 = np.where(p_effective_MPaa > pb_effective_MPaa, 
                               upvt.unf_bo_above_pb_m3m3(bob_m3m3 = b_oilb_calc_m3m3, 
                                                         compr_o_1MPa = co_1MPa, 
@@ -446,7 +556,7 @@ class BlackOilStanding:
         self._mu_gas_cP = upvt.unf_mu_gas_Lee_rho_cP(t_K = self.t_K, 
                                                      gamma_gas = self._gamma_gas, 
                                                      rho_gas_kgm3 = self._rho_gas_kgm3)
-        self._bg_m3m3 = upvt.unf_bg_gas_z_m3m3(t_K = self.t_K, 
+        self._b_gas_m3m3 = upvt.unf_b_gas_z_m3m3(t_K = self.t_K, 
                                                p_MPaa = self.p_MPaa,
                                                z =self._z)
         #
@@ -467,13 +577,13 @@ class BlackOilStanding:
         # water
         self._salinity_ppm = upvt.unf_salinity_from_gamma_water_ppm(gamma_water = self._gamma_wat)
 
-        self._bw_m3m3 = upvt.unf_bw_McCain_m3m3(t_K = self.t_K, 
+        self._b_water_m3m3 = upvt.unf_b_water_McCain_m3m3(t_K = self.t_K, 
                                                p_MPaa = self.p_MPaa)
         
-        self._rho_wat_kgm3 = upvt.unf_rho_water_bw_kgm3(gamma_w = self._gamma_wat,
-                                                       bw_m3m3=self._bw_m3m3)
+        self._rho_water_kgm3 = upvt.unf_rho_water_bw_kgm3(gamma_w = self._gamma_wat,
+                                                       bw_m3m3=self._b_water_m3m3)
 
-        self._mu_wat_cP = upvt.unf_mu_water_McCain_cP(t_K = self.t_K, 
+        self._mu_water_cP = upvt.unf_mu_water_McCain_cP(t_K = self.t_K, 
                                                      p_MPaa = self.p_MPaa, 
                                                      s_ppm = self._salinity_ppm)
 

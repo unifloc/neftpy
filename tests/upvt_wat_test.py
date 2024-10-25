@@ -32,7 +32,7 @@ class PVTwTestCase(unittest.TestCase):
     def test_unf_fvf_brine_McCain_m3m3(self):
         t_K = 300
         p_MPaa =20
-        self.assertAlmostEqual(pvtw.unf_bw_McCain_m3m3(t_K, p_MPaa), 1.0007434853666817,
+        self.assertAlmostEqual(pvtw.unf_b_water_McCain_m3m3(t_K, p_MPaa), 1.0007434853666817,
                                delta=0.0001)
 
     def test_unf_fvf_brine_Spivey_m3m3(self):

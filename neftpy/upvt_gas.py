@@ -670,7 +670,7 @@ def unf_mu_gas_Lee_rho_cP(t_K: float,
 ====================================================================================================
 """
 
-def unf_bg_gas_z_m3m3(p_MPaa:float, 
+def unf_b_gas_z_m3m3(p_MPaa:float, 
                        t_K:float,
                        z:float)->float:
     """
@@ -690,7 +690,7 @@ def unf_bg_gas_z_m3m3(p_MPaa:float,
 
     return P_SC_MPa * t_K * z / (Z_SC * T_SC_K * p_MPaa) # тут от нормальный условий по температуре
 
-def unf_bg_gas_m3m3(p_atma:float, 
+def unf_b_gas_m3m3(p_atma:float, 
                     t_C:float,
                     gamma_gas:float,
                     method_z:str='Standing', 
@@ -714,7 +714,7 @@ def unf_bg_gas_m3m3(p_atma:float,
                     gamma_gas=gamma_gas,
                     method_z=method_z, 
                     safe_z=safe_z)
-    return unf_bg_gas_z_m3m3(p_MPaa=p_MPaa, t_K=t_K, z=z)
+    return unf_b_gas_z_m3m3(p_MPaa=p_MPaa, t_K=t_K, z=z)
 
 """ 
 ====================================================================================================

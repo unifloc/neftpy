@@ -61,7 +61,7 @@ class PVTgTestCase(unittest.TestCase):
         t_K = 350
         p_MPaa = 10
         z = 0.84
-        self.assertAlmostEqual(pvtg.unf_bg_gas_z_m3m3(p_MPaa, t_K,  z), 0.010162381033600544, delta=0.0001)
+        self.assertAlmostEqual(pvtg.unf_b_gas_z_m3m3(p_MPaa, t_K,  z), 0.010162381033600544, delta=0.0001)
 
 
     def test_unf_rho_gas_bg_kgm3(self):
@@ -75,7 +75,7 @@ class PVTgTestCase(unittest.TestCase):
         T_K = 300
         z = 1.1
         P_MPa = 0.3
-        self.assertAlmostEqual(pvtg.unf_bg_gas_z_m3m3(P_MPa, T_K, z ),
+        self.assertAlmostEqual(pvtg.unf_b_gas_z_m3m3(P_MPa, T_K, z ),
                                0.3802063789868669,
                                delta=0.0001)
         

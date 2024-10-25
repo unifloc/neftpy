@@ -9,7 +9,7 @@ import scipy.optimize as opt
 
 # uPVT свойства для воды
 
-def unf_bw_McCain_m3m3(t_K:float, p_MPaa:float)->float:
+def unf_b_water_McCain_m3m3(t_K:float, p_MPaa:float)->float:
     """
         FVF of brine by McCain
 
@@ -35,8 +35,7 @@ def unf_rho_water_bw_kgm3(gamma_w:float,
     :param bw_m3m3:
     :return:
     """
-    rho_wat_rc_kgm3 = 1000 * gamma_w / bw_m3m3
-    return rho_wat_rc_kgm3
+    return 1000 * gamma_w / bw_m3m3
 
 def unf_mu_water_McCain_cP(t_K:float, p_MPaa:float, s_ppm:float)->float:  
     """
