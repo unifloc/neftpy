@@ -136,8 +136,7 @@ def unf_rs_Standing_m3m3(p_MPaa:float=1,
                          pb_MPaa:float=10,
                          rsb_m3m3:float=0, 
                          gamma_oil:float=0.86, 
-                         gamma_gas:float=0.6, 
-                         calc_drs_dp:bool=False
+                         gamma_gas:float=0.6
                          )->float:
     """
     Расчет газосодержания в нефти при заданном давлении и температуре Standing (1947)
@@ -149,7 +148,6 @@ def unf_rs_Standing_m3m3(p_MPaa:float=1,
     :param rsb_m3m3: газосодержание при давлении насыщения, m3/m3
     :param gamma_oil: удельная плотность нефти
     :param gamma_gas: удельная плотность газа
-    :param calc_drs_dp: флаг расчета производной, по умолчанию нет
     :return: газосодержание при заданном давлении и температуре, m3/m3
              или производная - в зависимости от флага calc_drs_dp
 
@@ -161,30 +159,55 @@ def unf_rs_Standing_m3m3(p_MPaa:float=1,
     """
 
     yg = RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil
-    
-    if calc_drs_dp:
-        drs_dp = np.where(pb_MPaa * rsb_m3m3 == 0, 
-                            gamma_gas * (1.92 / 10**yg) ** 1.204 * 1.204 * p_MPaa**0.204, 
-                            np.where(p_MPaa < pb_MPaa, 
-                                    rsb_m3m3 * np.divide(1, pb_MPaa, 
-                                                        where=pb_MPaa!=0
-                                                        ) ** 1.204 * p_MPaa ** 0.204,
-                                    0
-                                    )
-                            )
-        return drs_dp
-    else:
-        rs_m3m3 = np.where(pb_MPaa * rsb_m3m3 == 0, 
-                            gamma_gas * (1.92 * p_MPaa / 10 ** yg) ** 1.204, 
-                            np.where(p_MPaa < pb_MPaa, 
-                                    rsb_m3m3 * np.divide(p_MPaa, pb_MPaa, 
-                                                        where=pb_MPaa!=0
-                                                        ) ** 1.204,
-                                    rsb_m3m3
-                                    )
-                            )
-        return rs_m3m3
 
+    rs_m3m3 = np.where(pb_MPaa * rsb_m3m3 == 0, 
+                        gamma_gas * (1.92 * p_MPaa / 10 ** yg) ** 1.204, 
+                        np.where(p_MPaa < pb_MPaa, 
+                                rsb_m3m3 * np.divide(p_MPaa, pb_MPaa, 
+                                                    where=pb_MPaa!=0
+                                                    ) ** 1.204,
+                                rsb_m3m3
+                                )
+                        )
+    return rs_m3m3
+
+def unf_drs_dp_Standing_m3m3(p_MPaa:float=1, 
+                             t_K:float=350,
+                             pb_MPaa:float=10,
+                             rsb_m3m3:float=0, 
+                             gamma_oil:float=0.86, 
+                             gamma_gas:float=0.6
+                             )->float:
+    """
+    Расчет производной от газосодержания в нефти по давлению Standing (1947)
+    
+    :param p_MPaa: давление, MPa
+    :param t_K: температура, К
+    :param pb_MPaa: давление насыщения, MPa
+    :param rsb_m3m3: газосодержание при давлении насыщения, m3/m3
+    :param gamma_oil: удельная плотность нефти
+    :param gamma_gas: удельная плотность газа
+    :return:  производная 
+
+    ref1 "A Pressure-Volume-Temperature Correlation for Mixtures of California Oil and Gases",
+    M.B. Standing, Drill. & Prod. Prac., API, 1947.
+
+    ref2  "Стандарт компании Юкос. Физические свойства нефти. Методы расчета." Афанасьев В.Ю., Хасанов М.М. и др. 2002 г
+    может считать в случае если нет давления насыщения и газосодержания при давлении насыщения, корреляция не точная
+    """
+
+    yg = RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil
+
+    drs_dp = np.where(pb_MPaa * rsb_m3m3 == 0, 
+                        gamma_gas * (1.92 / 10**yg) ** 1.204 * 1.204 * p_MPaa**0.204, 
+                        np.where(p_MPaa < pb_MPaa, 
+                                rsb_m3m3 * np.divide(1, pb_MPaa, 
+                                                    where=pb_MPaa!=0
+                                                    ) ** 1.204 * p_MPaa ** 0.204,
+                                0
+                                )
+                        )
+    return drs_dp
 
 def _unf_rs_Velarde_m3m3_(p_MPaa:float=1, 
                           t_K:float=350,

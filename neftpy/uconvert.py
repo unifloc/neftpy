@@ -103,9 +103,17 @@ def atm_2_MPa(value):
     """
     converts pressure in atm (standard atmosphere) to MPa
     :param value: pressure value in atm
-    :return: pressure value in Pa
+    :return: pressure value in MPa
     """
     return value * const.atm / const.mega
+
+def MPa_2_atm(value):
+    """
+    converts pressure in MPa to atm (standard atmosphere)
+    :param value: pressure value in MPa
+    :return: pressure value in atm
+    """
+    return value / const.atm * const.mega
 
 def Pa_2_atm(value):
     """
