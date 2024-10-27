@@ -23,8 +23,8 @@ print(res)
 
 import neftpy.fluid as fl 
 
-f = fl.BlackOilStanding(gamma_gas=0.6, gamma_oil=0.82)
-f.set_calibration_param(pb_calibr_atma=100, tb_calibr_C=80, b_oilb_calibr_m3m3=1.1)
+f = fl.Fluid_BlackOilStanding(gamma_gas=0.6, gamma_oil=0.82)
+f.set_calibration(pb_calibr_atma=100, tb_calibr_C=80, b_oilb_calibr_m3m3=1.1)
 
 p = np.linspace(1, 100, 10)
 f.calc(p_atma=p, t_C= 90)
