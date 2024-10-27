@@ -16,7 +16,7 @@ class Feed:
     а также их расходные характеристики - дебиты, доли флюида в потоке и прочее
     """
     def __init__(self):
-        self.fluid = BlackOilStanding()
+        self.fluid = Fluid_BlackOilStanding()
         
         self.q_liq_sm3day = 10
         self.fw_perc = 0
@@ -133,21 +133,29 @@ class Feed:
     # ------------ доля газа в потоке ------------------------
     @property
     def gas_fraction(self):
+        """
+        объемная расходная доля газа в потоке
+        """
         return self.q_gas_m3day / (self.q_gas_m3day + self.q_oil_m3day + self.q_water_m3day)
 
 
 
-class BlackOilStanding:
-
+class Fluid_BlackOilStanding:
+    """
+    базовый класс задания флюидов (нефти, воды и газа) на основе модели нелетучей нефти (black oil)
+    позволяет рассчитать все статические свойства флюидов необходимые для расчета
+    статические свойства - которые могут быть определены в PVT лаборатории
+    реализует фиксированный набор корреляционных зависимостей на основе
+    корреляции Стенданга для давления насыщения и газосодержания
+    поддерживает калибровку модели на измеренные значения давления насыщения,
+    объемного коэффициента нефти при давлении насыщения и вязкости нефти при давлении насыщения. 
+    """
     def __init__(self, 
                 gamma_oil=0.86, 
                 gamma_gas=0.6, 
-                gamma_wat=1.0, 
+                gamma_water=1.0, 
                 rsb_m3m3=100.0,
-                tb_C=80, 
-                y_h2s=0, 
-                y_co2=0,
-                y_n2=0  ):
+                tb_C=80):
         """
         Создает флюид с заданными базовыми свойствами
 
@@ -158,68 +166,162 @@ class BlackOilStanding:
         :param gamma_wat: specific gravity of water
         :param rsb_m3m3: solution gas ratio at bubble point
         :param tb_C: reservoir temperature 
-        :param y_h2s: mole fraction of the hydrogen sulfide
-        :param y_co2: mole fraction of the carbon dioxide
-        :param y_n2: mole fraction of the nitrogen
         """
-        self._gamma_gas = gamma_gas
-        self._gamma_oil = gamma_oil
-        self._gamma_wat = gamma_wat
-        self._rsb_m3m3 = rsb_m3m3
-        self._tb_C = tb_C  
-        self._y_h2s = y_h2s
-        self._y_co2 = y_co2
-        self._y_n2 = y_n2
+
+        self._gamma_gas = gamma_gas         # удельная плотность газа, по воздуху
+        self._gamma_oil = gamma_oil         # удельная плотность нефти по воде
+        self._gamma_water = gamma_water     # удельная плотность воды по воде
+        self._rsb_m3m3 = rsb_m3m3           # газосодержание при давлении насыщения
+        self._tb_C = tb_C                   # температура давления насыщения (пластовая)
+
+        # неуглеводородные примеси в газе
+        self._y_h2s = 0.0
+        self._y_co2 = 0.0
+        self._y_n2 = 0.0
+
         # термобарические условия для которых рассчитаны свойства
         self._p_atma = uconst.P_SC_atma                 # thermobaric conditions for all parameters
         self._t_C = uconst.T_SC_C                  # can be set up by calc method
 
-        #self._p_effective_MPaa =  uc.atm_2_MPa(self._p_atma)
-
-        # расчетные параметры доступны только для чтения через свойства
-
-        self._pb_atma = 0.0
-        self._rs_m3m3 = 0.0
-        #self.rho_oil_kgm3 = 0.0
-        #self.b_oilb_calc_m3m3 = 0.0
-        #self.b_oil_m3m3 = 1.0
-        #self.compr_oil_1bar = 0.0
-
-        #self.mu_dead_oil_cP = 0.0
-        #self.mu_oilb_cP = 0.0
-        #self.mu_oil_cP = 0.0  
-    
-        #self.mu_gas_cP = 0.0
-        #self.mu_wat_cP = 0.0
-        #self.rho_gas_kgm3 = 0.0
-        #self.rho_wat_kgm3 = 0.0
-        #self.rsw_m3m3 = 0.0   # TODO проверить - равен GWR?
-        #self.b_gas_m3m3 = 0.0
-        #self.b_wat_m3m3 = 0.0
-        #self.z = 0.0
-        #self.compr_gas_1bar = 0.0
-        #self.compr_wat_1bar = 0.0
-        #self.heatcap_oil_jkgc = 0.0
-        #self.heatcap_gas_jkgc = 0.0
-        #self.heatcap_wat_jkgc = 0.0
-        #self.sigma_oil_gas_Nm = 0.0
-        #self.sigma_wat_gas_Nm = 0.0
-        #self.thermal_conduct_oil_wmk = 0.0
-        #self.thermal_conduct_gas_wmk = 0.0
-        #self.thermal_conduct_wat_wmk = 0.0
-        #self.thermal_expansion_wat_1c = 0.0
-        
-        #self.activate_rus_cor = 0
-
-        # калибровочные параметры для внутренних расчетов
-        #self._p_cal_mult = 1
-        #self.b_oil_cal_mult = 1
-        #self.mu_cal_mult = 1
-
+        # внутренние калибровочные значения
+        # если меньше или равны 0 - калибровка не применяется
         self._pb_calibr_atma = 0.0
-        #self.tb_calibr_C = 0.0
         self._b_oilb_calibr_m3m3 = 0.0
         self._mu_oilb_calibr_cP = 0.0
+
+        # настройка схемы расчета 
+        # авторасчет - любое изменение исходного параметра привет к пересчету всех параметров
+        self.auto_calc = True
+        # флаг состояния - свойства рассчитаны или нет
+        self._calculated = False
+
+    #
+    # описание исходных параметров флюида
+    #
+    @property
+    def gamma_gas(self):
+        """
+        удельная плотность газа, по воздуху
+        """
+        return self._gamma_gas
+    
+    @gamma_gas.setter
+    def gamma_gas(self, value:float):
+        self._gamma_gas = value
+        self._calculated = False
+        if self.auto_calc:
+            self.calc(p_atma=self.p_atma, t_C=self.t_C)
+
+    @property
+    def gamma_oil(self):
+        """
+        удельная плотность нефти, по воде
+        """
+        return self._gamma_oil
+    
+    @gamma_oil.setter
+    def gamma_gas(self, value:float):
+        self._gamma_oil = value
+        self._calculated = False
+        if self.auto_calc:
+            self.calc(p_atma=self.p_atma, t_C=self.t_C)
+
+    @property
+    def gamma_water(self):
+        """
+        удельная плотность воды, по воде
+        """
+        return self._gamma_water
+    
+    @gamma_water.setter
+    def gamma_water(self, value:float):
+        self._gamma_water = value
+        self._calculated = False
+        if self.auto_calc:
+            self.calc(p_atma=self.p_atma, t_C=self.t_C)
+
+    @property
+    def rsb_m3m3(self):
+        """
+        газосодержание при давлении насыщения, м3/м3, исходный параметр
+        """
+        return self._rsb_m3m3
+    
+    @rsb_m3m3.setter
+    def rsb_m3m3(self, value):
+        self._rsb_m3m3 = value
+        self._calculated = False
+        if self.auto_calc:
+            self.calc(p_atma=self.p_atma, t_C=self.t_C)
+
+    @property
+    def tb_C(self):
+        return self._tb_C
+    
+    @tb_C.setter
+    def tb_C(self, value):
+        self._tb_C = value
+        self._calculated = False
+        if self.auto_calc:
+            self.calc(p_atma=self.p_atma, t_C=self.t_C)
+
+    #
+    # калибровочные параметры 
+    #
+
+    @property
+    def pb_atma(self):
+        """
+        давление насыщения, атма, при заданной температуре пласта tb_C
+        """
+        return self._pb_atma
+    
+    @pb_atma.setter
+    def pb_atma(self, value):
+        """
+        попытка задать давление насыщения эквивалентна
+        заданию калибровки по давлению насыщения при текущей температуре пласта
+        """
+        self._pb_calibr_atma = value
+        self._calculated = False
+        if self.auto_calc:
+            self.calc(p_atma=self.p_atma, t_C=self.t_C)
+
+    @property
+    def mu_oilb_cP(self):
+        """
+        вязкость нефти при давлении насыщения и температуре давления насыщения, сП, только для чтения
+        """
+        return self._mu_oilb_cP
+    
+    
+    def set_calibration(self,
+                        pb_calibr_atma=-1., 
+                        tb_calibr_C=80, 
+                        b_oilb_calibr_m3m3=0, 
+                        mu_oilb_calibr_cP=0
+                        ):
+        # установка калибровочных параметров  
+        # как отдельный метод, чтобы в явном виде обратить внимание пользователя на 
+        # механизм калибровки
+        self._pb_calibr_atma = pb_calibr_atma
+        self._tb_C = tb_calibr_C
+        self._b_oilb_calibr_m3m3 = b_oilb_calibr_m3m3
+        self._mu_oilb_calibr_cP = mu_oilb_calibr_cP
+        
+        self._calculated = False
+        if self.auto_calc:
+            self.calc(p_atma=self.p_atma, t_C=self.t_C)
+    #
+    # расчетные свойства флюида - только для чтения
+    #
+
+    @property
+    def calculated(self):
+        """
+        флаг состояния экземпляра класса
+        """
+        return self._calculated
 
     @property
     def p_atma(self):
@@ -297,20 +399,6 @@ class BlackOilStanding:
         return self._rs_m3m3
     
     @property
-    def rsb_m3m3(self):
-        """
-        газосодержание при давлении насыщения, м3/м3, исходный параметр
-        """
-        return self._rsb_m3m3
-    
-    @property
-    def pb_atma(self):
-        """
-        давление насыщения, атма, при заданной температуре пласта tb_C
-        """
-        return self._pb_atma
-    
-    @property
     def pb_at_tcalc_atma(self):
         """
         давление насыщения, атма, при расчетной температуре t_C
@@ -351,13 +439,6 @@ class BlackOilStanding:
         вязкость дегаризированной нефти, сП, при стандартных условиях, только для чтения
         """
         return self._mu_dead_oil_cP
-
-    @property
-    def mu_oilb_cP(self):
-        """
-        вязкость нефти при давлении насыщения и температуре давления насыщения, сП, только для чтения
-        """
-        return self._mu_oilb_cP
 
     @property
     def mu_gas_cP(self):
@@ -409,21 +490,22 @@ class BlackOilStanding:
         """
         return self._salinity_ppm 
 
-    def set_calibration_param(self,
-                              pb_calibr_atma=-1., 
-                              tb_calibr_C=80, 
-                              b_oilb_calibr_m3m3=0, 
-                              mu_oilb_calibr_cP=0.5
-                              ):
-        # установка калибровочных параметров  
-        # как отдельный метод, чтобы в явном виде обратить внимание пользователя на 
-        # механизм калибровки
-        self._pb_calibr_atma = pb_calibr_atma
-        self._tb_C = tb_calibr_C
-        self._b_oilb_calibr_m3m3 = b_oilb_calibr_m3m3
-        self._mu_oilb_calibr_cP = mu_oilb_calibr_cP
-        pass
+    #
+    # расчетные функции
+    #
 
+    def set_gas_impurities(self,
+                            y_h2s=0, 
+                            y_co2=0,
+                            y_n2=0  ):
+        """
+        :param y_h2s: mole fraction of the hydrogen sulfide
+        :param y_co2: mole fraction of the carbon dioxide
+        :param y_n2: mole fraction of the nitrogen
+        """
+        self._y_h2s = y_h2s
+        self._y_co2 = y_co2
+        self._y_n2 = y_n2
 
     def __calc_oil_props(self):
         """
@@ -575,12 +657,12 @@ class BlackOilStanding:
     def __calc_water_props(self)->float:
     
         # water
-        self._salinity_ppm = upvt.unf_salinity_from_gamma_water_ppm(gamma_water = self._gamma_wat)
+        self._salinity_ppm = upvt.unf_salinity_from_gamma_water_ppm(gamma_water = self._gamma_water)
 
         self._b_water_m3m3 = upvt.unf_b_water_McCain_m3m3(t_K = self.t_K, 
                                                p_MPaa = self.p_MPaa)
         
-        self._rho_water_kgm3 = upvt.unf_rho_water_bw_kgm3(gamma_w = self._gamma_wat,
+        self._rho_water_kgm3 = upvt.unf_rho_water_bw_kgm3(gamma_w = self._gamma_water,
                                                        bw_m3m3=self._b_water_m3m3)
 
         self._mu_water_cP = upvt.unf_mu_water_McCain_cP(t_K = self.t_K, 
@@ -617,6 +699,8 @@ class BlackOilStanding:
         # свойства воды
 
         self.__calc_water_props()
+
+        self._calculated = True
 
     #def _calc_compressibility_oil_1Mpa(self):
     #    return upvt.unf_compressibility_oil_VB_1Mpa(self._rs_m3m3, self.t_K, self.gamma_oil, self.pcal_MPaa, self.gamma_gas)
