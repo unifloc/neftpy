@@ -9,6 +9,8 @@ from scipy.interpolate import PchipInterpolator
 from scipy.interpolate import RegularGridInterpolator
 import json
 
+from typing import Tuple
+
 
 # uPVT свойства для газа
 
@@ -22,7 +24,7 @@ def unf_pseudocritical_McCain_p_MPa_t_K(gamma_gas:float,
                                         y_h2s:float=0.0, 
                                         y_co2:float=0.0, 
                                         y_n2:float=0.0,
-                                       )->float:
+                                       )->Tuple[float, float]:
     """
     Correlation for pseudocritical pressure and temperature 
     taking into account the presense of non-hydrocarbon gases
@@ -68,13 +70,13 @@ def unf_pseudocritical_McCain_p_MPa_t_K(gamma_gas:float,
     return (ppc_MPa, tpc_K)
 
 
-def unf_pseudocritical_Standing_p_MPa_t_K(gamma_gas:float)->float:  # VBA
+def unf_pseudocritical_Standing_p_MPa_t_K(gamma_gas:float)->Tuple[float, float]:  # VBA
     tpc = 93.3 + 180 * gamma_gas - 6.94 * gamma_gas ** 2
     ppc = 4.6 + 0.1 * gamma_gas - 0.258 * gamma_gas ** 2
     return (ppc, tpc)
 
 
-def unf_pseudocritical_Sutton_p_MPa_t_K(gamma_gas:float)->float:  # VBA
+def unf_pseudocritical_Sutton_p_MPa_t_K(gamma_gas:float)->Tuple[float, float]:  # VBA
     """
     https://petrowiki.spe.org/Real_gases
     """

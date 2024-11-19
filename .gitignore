@@ -8,7 +8,8 @@ dist/
 build/
 welltest.egg*
 venv/
-.venv/
+.venv*/
+.venv_/
 ~*.*
 neftpy.egg-info/*
 .vscode/

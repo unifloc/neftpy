@@ -220,7 +220,7 @@ class Fluid_BlackOilStanding:
         return self._gamma_oil
     
     @gamma_oil.setter
-    def gamma_gas(self, value:float):
+    def gamma_oil(self, value:float):
         self._gamma_oil = value
         self._calculated = False
         if self.auto_calc:
@@ -614,7 +614,7 @@ class Fluid_BlackOilStanding:
         #self._heatcap_oil_jkgc = self._calc_heat_capacity_oil_JkgC()
         #self._thermal_conduct_oil_wmk = self._calc_thermal_conductivity_oil_WmK()
 
-    def __calc_gas_props(self)->float:
+    def __calc_gas_props(self)->None:
         # расчет свойств газа
         # gas
         ppc_MPa, tpc_K = upvt.unf_pseudocritical_McCain_p_MPa_t_K(gamma_gas = self._gamma_gas, 
@@ -654,7 +654,7 @@ class Fluid_BlackOilStanding:
                                                                                      gamma_gas = self._gamma_gas)
         self._thermal_conduct_gas_wmk = upvt.unf_thermal_conductivity_gas_methane_WmK(t_C = self.t_C)
 
-    def __calc_water_props(self)->float:
+    def __calc_water_props(self)->None:
     
         # water
         self._salinity_ppm = upvt.unf_salinity_from_gamma_water_ppm(gamma_water = self._gamma_water)
@@ -680,7 +680,7 @@ class Fluid_BlackOilStanding:
     
 
 
-    def calc(self, p_atma:float, t_C:float)->float:
+    def calc(self, p_atma:float, t_C:float)->None:
         """
         расчет всех свойств флюида
         """
