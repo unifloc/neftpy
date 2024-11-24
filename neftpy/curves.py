@@ -60,7 +60,7 @@ class Curve:
     def num_points(self):
         return len(self._points)
     
-    def _interp(self, xval:ArrayLike):
+    def _interp(self, xval:np.ndarray):
         """
         интерполяция значений с использованием numpy interp
         """
@@ -68,4 +68,11 @@ class Curve:
                          xp=self._points[:,0],
                          fp=self._points[:,1])
 
+    def get_point(self, x:np.ndarray)->np.ndarray:
+        return self._interp(x)
+
+    def get_grad(self, x:float)->float:
+        xx = np.array([x-0.01, x+0.01])
+        yy = self.get_point(xx)
+        return (yy[1]-yy[0]) / 0.02
 

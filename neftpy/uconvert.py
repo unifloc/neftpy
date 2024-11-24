@@ -1,9 +1,10 @@
 """
 Constant and units conversion functions for for petroleum engineering calculations
 """
-
+import numpy as np
 import scipy.constants as const
 from neftpy.uconst import *
+
 
 # simple unit conversion functions
 
@@ -579,5 +580,5 @@ def grad_2_rad(value):
     :param value: angle in grad
     :return: angle in rad
     """
-    return value * PI / 180
+    return value * const.pi / 180
 

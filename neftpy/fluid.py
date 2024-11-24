@@ -116,8 +116,26 @@ class Feed:
         """
         плотность жидкости (вода+нефть) в рабочих условиях
         """
-        return self.fluid._rho_oil_kgm3
+        fw = self.fw_fr
+        return self.fluid._rho_oil_kgm3 * (1-fw) + self.fluid.rho_water_kgm3 * fw
     
+    @property
+    def mu_liq_cP(self):
+        """
+        вязкость жидкости в рабочих условиях
+        """
+        fw = self.fw_fr
+        return self.fluid.mu_oil_cP* (1-fw) + self.fluid.mu_water_cP * fw
+    
+
+    @property
+    def mu_liq_cP(self):
+        """
+        вязкость жидкости в рабочих условиях
+        """
+        fw = self.fw_fr
+        return self.fluid* (1-fw) + self.fluid.mu_water_cP * fw
+
     # ------------ дебит смести ------------------------
     @property
     def q_mix_m3day(self):
