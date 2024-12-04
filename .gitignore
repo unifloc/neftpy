@@ -13,3 +13,4 @@ venv/
 ~*.*
 neftpy.egg-info/*
 .vscode/
+docs/_build/
