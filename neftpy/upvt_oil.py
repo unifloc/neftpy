@@ -214,13 +214,13 @@ def unf_drs_dp_Standing_m3m3(p_MPaa:FloatArray=1,
                         )
     return drs_dp
 
-def _unf_rs_Velarde_m3m3_(p_MPaa:FloatArray=1, 
-                          t_K:FloatArray=350,
-                          pb_MPaa:FloatArray=10, 
-                          rsb_m3m3:FloatArray=100., 
-                          gamma_oil:FloatArray=0.86, 
-                          gamma_gas:FloatArray=0.6, 
-                          )->FloatArray:
+def _unf_rs_Velarde_m3m3_(p_MPaa:float=1, 
+                          t_K:float=350,
+                          pb_MPaa:float=10, 
+                          rsb_m3m3:float=100., 
+                          gamma_oil:float=0.86, 
+                          gamma_gas:float=0.6, 
+                          )->float:
     """
     газосодержание по Velarde McCain (1999) 
 
@@ -539,14 +539,17 @@ def unf_rho_oil_Mccain_kgm3(p_MPaa:FloatArray=1,
 
     gamma_gassp = np.where(gamma_gassp == 0, gamma_gas, gamma_gassp)
 
-    def ro_po_equation(ro_po, vars):
+    def ro_po_equation(ro_po, *vars):
         gamma_gassp, gamma_gas, gamma_oil, rs_scfstb = vars
         ro_a = -49.8930 + 85.0149 * gamma_gassp - 3.70373 * gamma_gassp * ro_po +\
             0.0479818 * gamma_gassp * ro_po ** 2 + 2.98914 * ro_po - 0.0356888 * ro_po ** 2
         return (rs_scfstb * gamma_gas + 4600 * gamma_oil) / (73.71 + rs_scfstb * gamma_gas / ro_a) -ro_po
     
+    # для fsolve начальное приближение должно иметь такую же форму как следующие итерации
+    # обеспечим это используя np.broadcast_arrays
+    gamma_gassp, gamma_gas, gamma_oil, rs_scfstb = np.broadcast_arrays(gamma_gassp, gamma_gas, gamma_oil, rs_scfstb)
     ro_po = 52.8 - 0.01 * rs_scfstb  # первое приближение
-    ro_po = opt.fsolve(ro_po_equation, ro_po, [gamma_gassp, gamma_gas, gamma_oil, rs_scfstb])
+    ro_po = opt.fsolve(ro_po_equation, ro_po, (gamma_gassp, gamma_gas, gamma_oil, rs_scfstb))
     pb_psia = MPa_2_psi(pb_MPaa)
     p = np.where(p_MPaa < pb_MPaa, p_psia, pb_psia)
 
