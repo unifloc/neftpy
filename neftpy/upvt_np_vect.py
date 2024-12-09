@@ -37,6 +37,8 @@ unf_pb_Glaso_MPaa = pvto.unf_pb_Glaso_MPaa
 
 unf_rs_Standing_m3m3 = pvto.unf_rs_Standing_m3m3    # газосодержание по Стендингу
 
+unf_drs_dp_Standing_m3m3 = pvto.unf_drs_dp_Standing_m3m3
+
 # наивная векторизация для старой версии
 unf_rs_Velarde_2_m3m3 = np.vectorize(pvto._unf_rs_Velarde_m3m3_)
 

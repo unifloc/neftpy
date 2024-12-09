@@ -113,7 +113,7 @@ class PVToTestCase(unittest.TestCase):
         gamma_oil = 0.86
         gamma_gas = 0.6
         t_K = 353
-        unf_vba_res = [3.35934407, 4.54484246, 5.10789295, 5.49914238, 5.80473597, 6.0580113]
+        unf_vba_res = [ 2.79015288, 16.60905883, 33.09100083, 51.15481285, 70.38965542, 90.56827519]
         unf_vba_p_MPaa = [1,4.4,7.8,11.2,14.6,18]
         pb_MPaa = 0
         rsb = 120
@@ -122,7 +122,7 @@ class PVToTestCase(unittest.TestCase):
         p_MPaa = np.array(unf_vba_p_MPaa)        
         res = np.array(unf_vba_res)
         
-        self.assertTrue(np.allclose(pvt_vect.unf_rs_Standing_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas, calc_drs_dp=True),
+        self.assertTrue(np.allclose(pvt_vect.unf_rs_Standing_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas),
                                     res, 
                                     rtol=0.0001))
 
@@ -140,7 +140,7 @@ class PVToTestCase(unittest.TestCase):
         p_MPaa = np.array(unf_vba_p_MPaa)        
         res = np.array(unf_vba_res)
         
-        self.assertTrue(np.allclose(pvt_vect.unf_rs_Standing_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas, calc_drs_dp=True),
+        self.assertTrue(np.allclose(pvt_vect.unf_drs_dp_Standing_m3m3(p_MPaa, t_K, pb_MPaa, rsb, gamma_oil, gamma_gas),
                                     res, 
                                     rtol=0.0001))
     def test_unf_rs_Velarde_m3m3(self):
