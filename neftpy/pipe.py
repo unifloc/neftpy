@@ -216,24 +216,25 @@ class Pipe:
         q_gas_rc_m3day = self.feed.q_gas_m3day
         mu_liq_rc_cP = self.feed.mu_liq_cP
         mu_gas_rc_cP = self.feed.fluid.mu_gas_cP
-        sigma_l_Nm
+        # sigma_l_Nm
+        return p_atma
 
-        """ 
-            , 
-                          theta_deg,
-                          roughness_m , 
-                          q_liq_rc_m3day,
-                          q_gas_rc_m3day,
-                          mu_liq_rc_cP,
-                          mu_gas_rc_cP,
-                          sigma_l_Nm,
-                          rho_liq_rc_kgm3,
-                          rho_gas_rc_kgm3,
-                          Payne_et_all_holdup = 0,
-                          Payne_et_all_friction = 1, 
-                          calibr_grav = 1,
-                          calibr_fric = 1
-        """
+    
+        #, 
+        #                theta_deg,
+        #                roughness_m , 
+        #                q_liq_rc_m3day,
+        #                q_gas_rc_m3day,
+        #                mu_liq_rc_cP,
+        #               mu_gas_rc_cP,
+        #                sigma_l_Nm,
+        #                rho_liq_rc_kgm3,
+        #                rho_gas_rc_kgm3,
+        #                Payne_et_all_holdup = 0,
+        #                Payne_et_all_friction = 1, 
+        #                calibr_grav = 1,
+        #                calibr_fric = 1
+    
 
 # ===========================================================
 # Расчет коэффиуциента трения в трубе
