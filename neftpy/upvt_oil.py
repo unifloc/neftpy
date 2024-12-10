@@ -310,7 +310,7 @@ def unf_rs_Velarde_m3m3(p_MPaa:FloatArray=1,
     a3 = 0.231607087371213 * _pb_ ** 0.047094 / ( gamma_gas**1.48548 * _go_**0.164741 * _t_**0.09133)
 
     
-    pb_estimation_Valko_McCain = unf_pb_Valko_MPaa(RS_MAX_Velarde, gamma_oil, gamma_gas, t_K)
+    pb_estimation_Valko_McCain = unf_pb_Valko_MPaa(rsb_m3m3=RS_MAX_Velarde,gamma_oil=gamma_oil,gamma_gas=gamma_gas,t_K=t_K)
      
     rs_m3m3 = np.where(pb_MPaa > pb_estimation_Valko_McCain, 
                        np.where(p_MPaa < pb_MPaa,
