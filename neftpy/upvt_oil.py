@@ -38,15 +38,14 @@ def unf_pb_Standing_MPaa(t_K:FloatArray=350,
     min_rsb = 1.8
     rsb_m3m3 = np.array(rsb_m3m3)
     rsb_old = np.copy(rsb_m3m3)
-    rsb_m3m3 = np.where(rsb_m3m3 < min_rsb, min_rsb, rsb_m3m3)
+    mask = rsb_old < min_rsb
+    rsb_m3m3[mask] = min_rsb
     yg = RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil         # gas molar fraction
-    pb_MPaa = 0.5197 * (rsb_m3m3 / gamma_gas) ** 0.83 * 10 ** yg
+    pb_MPaa = np.array(0.5197 * (rsb_m3m3 / gamma_gas) ** 0.83 * 10 ** yg)
     # for low rsb values, we set the asymptotics Pb = 1 atma at Rsb = 0
     # for large rsb values do not correct what the correlation gives
-    return np.where(rsb_old < min_rsb, 
-                    (pb_MPaa - P_SC_MPa) * rsb_old / min_rsb + P_SC_MPa, 
-                    pb_MPaa
-                    )
+    pb_MPaa[mask] = (pb_MPaa[mask] - P_SC_MPa) * rsb_old[mask] / min_rsb + P_SC_MPa
+    return pb_MPaa
 
 
 def unf_pb_Valko_MPaa(t_K:FloatArray=350,
@@ -69,9 +68,12 @@ def unf_pb_Valko_MPaa(t_K:FloatArray=350,
 
     min_rsb = 1.8
     max_rsb = 800
+    rsb_m3m3 = np.array(rsb_m3m3)
     rsb_old = np.copy(rsb_m3m3)
-    rsb_m3m3 = np.where(rsb_m3m3 < min_rsb, min_rsb, rsb_m3m3)
-    rsb_m3m3 = np.where(rsb_m3m3 > max_rsb, max_rsb, rsb_m3m3)
+    mask_min = rsb_m3m3 < min_rsb
+    mask_max = rsb_m3m3 > max_rsb
+    rsb_m3m3[mask_min] = min_rsb
+    rsb_m3m3[mask_max] = max_rsb
     nplogrsb_m3m3 = np.log(rsb_m3m3)
     z1 = -4.81413889469569 + 0.748104504934282 * nplogrsb_m3m3 \
         + 0.174372295950536 * nplogrsb_m3m3 ** 2 - 0.0206 * nplogrsb_m3m3 ** 3
@@ -81,7 +83,7 @@ def unf_pb_Valko_MPaa(t_K:FloatArray=350,
     z4 = -7.2254661 + 0.043155 * t_K - 8.5548e-5 * t_K ** 2 + 6.00696e-8 * t_K ** 3
     z = z1 + z2 + z3 + z4
 
-    pb_MPaa = 12.1582266504102 * np.exp(0.0075 * z**2 + 0.713 * z)
+    pb_MPaa = np.array(12.1582266504102 * np.exp(0.0075 * z**2 + 0.713 * z))
 
 
     """
@@ -91,14 +93,8 @@ def unf_pb_Valko_MPaa(t_K:FloatArray=350,
     поэтому их устанавливаем вручную
     для больших значений газосодержания продолжим линейный тренд корреляции
     """
-
-    pb_MPaa = np.where(rsb_old < min_rsb, 
-                       (pb_MPaa - 0.1013) * rsb_old / min_rsb + 0.1013, 
-                       np.where(rsb_old > max_rsb, 
-                                (pb_MPaa - 0.1013) * rsb_old / max_rsb + 0.1013, 
-                                pb_MPaa)
-                        )
-
+    pb_MPaa[mask_min] = (pb_MPaa[mask_min] - P_SC_MPa) * rsb_old[mask_min] / min_rsb + P_SC_MPa
+    pb_MPaa[mask_max] = (pb_MPaa[mask_max] - P_SC_MPa) * rsb_old[mask_max] / max_rsb + P_SC_MPa
     return pb_MPaa
 
 
@@ -144,8 +140,9 @@ def unf_rs_Standing_m3m3(p_MPaa:FloatArray=1,
                          gamma_gas:FloatArray=0.6
                          )->FloatArray:
     """
-    Расчет газосодержания в нефти при заданном давлении и температуре Standing (1947)
-    используется зависимость обратная к корреляции между давлением насыщения и газосодержанием
+    Расчет газосодержания в нефти при заданном давлении и температуре Standing (1947),
+    используется зависимость обратная к корреляции между давлением насыщения и газосодержанием.
+    Давление насыщения работает как калибровка.
 
     :param p_MPaa: давление, MPa
     :param t_K: температура, К
@@ -213,6 +210,30 @@ def unf_drs_dp_Standing_m3m3(p_MPaa:FloatArray=1,
                                 )
                         )
     return drs_dp
+
+
+def unf_rsb_Standing_m3m3(pb_atma:FloatArray=10, 
+                          psp_MPaa:FloatArray=0.0, 
+                          tsp_K:FloatArray=0.0,
+                          gamma_oil:FloatArray=0.86, 
+                          )->FloatArray:
+    """
+    Расчет газосодержания при давлении насыщения
+
+    :param rsp_m3m3: separator producing gas-oil ratio, m3m3
+    :param psp_MPaa: pressure in separator, MPaa
+    :param tsp_K: temperature in separator, K
+    :param gamma_oil: specific oil density(by water)
+    :return: solution gas-oil ratio at bubble point pressure, rsb in m3/m3
+
+    """
+
+    return unf_rs_Standing_m3m3(p_MPaa=psp_MPaa, 
+                                t_K=tsp_K,
+                                pb_MPaa=0,
+                                rsb_m3m3=rsp_m3m3, 
+                                gamma_oil=gamma_oil, 
+                                gamma_gas=0.8)
 
 def _unf_rs_Velarde_m3m3_(p_MPaa:float=1, 
                           t_K:float=350,
@@ -282,7 +303,9 @@ def unf_rs_Velarde_m3m3(p_MPaa:FloatArray=1,
                         gamma_gas:FloatArray=0.6, 
                         )->FloatArray:
     """
-    газосодержание по Velarde McCain (1999) 
+    Газосодержание по Velarde McCain (1999)
+    Давление насыщения должно быть задано. Газосодержание
+    будет зависеть от состава газа. 
 
     :param p_MPaa: давление, MPa
     :param pb_MPaa: давление насыщения, MPa
@@ -296,6 +319,7 @@ def unf_rs_Velarde_m3m3(p_MPaa:FloatArray=1,
     J. VELARDE, T.A. BLASINGAME Texas A&M University, W.D. MCCAIN, JR. S.A. Holditch & Associates, Inc 1999
 
     """
+    pb_MPaa = np.array(pb_MPaa)
     pr = np.where(pb_MPaa > P_SC_MPa, 
                   MPa_2_psig(p_MPaa)/(MPa_2_psig(pb_MPaa)), 
                   0
@@ -310,7 +334,10 @@ def unf_rs_Velarde_m3m3(p_MPaa:FloatArray=1,
     a3 = 0.231607087371213 * _pb_ ** 0.047094 / ( gamma_gas**1.48548 * _go_**0.164741 * _t_**0.09133)
 
     
-    pb_estimation_Valko_McCain = unf_pb_Valko_MPaa(rsb_m3m3=RS_MAX_Velarde,gamma_oil=gamma_oil,gamma_gas=gamma_gas,t_K=t_K)
+    pb_estimation_Valko_McCain = unf_pb_Valko_MPaa(rsb_m3m3=RS_MAX_Velarde,
+                                                   gamma_oil=gamma_oil,
+                                                   gamma_gas=gamma_gas,
+                                                   t_K=t_K)
      
     rs_m3m3 = np.where(pb_MPaa > pb_estimation_Valko_McCain, 
                        np.where(p_MPaa < pb_MPaa,
