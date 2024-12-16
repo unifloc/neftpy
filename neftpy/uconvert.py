@@ -178,6 +178,15 @@ def atm_2_bar(value=1):
      """
     return value * const.atm / const.bar
 
+
+def atm_2_psi(value):
+    """
+    converts pressure in atm to psi
+    :param value: pressure value in atm
+    :return: pressure value in psi
+    """
+    return value * const.atm / const.psi
+
 # temperature
 
 
