@@ -220,7 +220,7 @@ class PVToTestCase(unittest.TestCase):
         gamma_oil = 0.86
         psp_MPaa = 5
         tsp_K = 320
-        self.assertAlmostEqual(pvto.unf_rsb_Mccain_m3m3(rsp_m3m3, psp_MPaa, tsp_K, gamma_oil),
+        self.assertAlmostEqual(pvto.unf_rsb_from_rs_sep_Mccain_m3m3(rsp_m3m3, psp_MPaa, tsp_K, gamma_oil),
                                161.03286985548442, 
                                delta=0.0001)
         

@@ -44,8 +44,11 @@ unf_rs_Velarde_2_m3m3 = np.vectorize(pvto._unf_rs_Velarde_m3m3_)
 
 unf_rs_Velarde_m3m3 = pvto.unf_rs_Velarde_m3m3
 
-unf_rsb_Mccain_m3m3 = pvto.unf_rsb_Mccain_m3m3
+unf_rsb_from_rs_sep_Mccain_m3m3 = pvto.unf_rsb_from_rs_sep_Mccain_m3m3
 
+unf_rsb_Valco_m3m3 = np.vectorize(pvto.unf_rsb_Valco_m3m3)
+
+unf_rsb_Standing_m3m3 = pvto.unf_rsb_Standing_m3m3
 
 """ 
 ====================================================================================================

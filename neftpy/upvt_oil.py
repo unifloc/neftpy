@@ -242,7 +242,7 @@ def _unf_rs_Velarde_m3m3_(p_MPaa:float=1,
                           gamma_gas:float=0.6, 
                           )->float:
     """
-    газосодержание по Velarde McCain (1999) 
+    газосодержание недонасыщенной нефти по Velarde McCain (1999) 
 
     :param p_MPaa: давление, MPa
     :param t_K: температура, К
@@ -302,7 +302,7 @@ def unf_rs_Velarde_m3m3(p_MPaa:FloatArray=1,
                         gamma_gas:FloatArray=0.6, 
                         )->FloatArray:
     """
-    Газосодержание по Velarde McCain (1999)
+    Газосодержание недонасыщенной нефти  по Velarde McCain (1999)
     Давление насыщения должно быть задано. Газосодержание
     будет зависеть от состава газа. 
 
@@ -351,12 +351,32 @@ def unf_rs_Velarde_m3m3(p_MPaa:FloatArray=1,
 
     return rs_m3m3
 
+def unf_rsb_Valco_m3m3(pb_atma:FloatArray=100,
+                       t_K:float=350,
+                       gamma_oil:float=0.86, 
+                       gamma_gas:float=0.6
+                       )->FloatArray:
+    """
+    газосодержание насыщенной нефти
+    обратная к unf_pb_Valko_MPaa
+    
+    :param pb_atma: давление насыщения, должно быть указано, м3/м3 
+    :param t_K: температура, К 
+    :param gamma_oil: удельная плотность нефти (от воды) 
+    :param gamma_gas: удельная плотность газа (от воздуха) 
+    :return: давление насыщения, МПа абсолютное 
+    """
+    rsb_arr = np.linspace(2,800,10)
+    pb_arr = unf_pb_Valko_MPaa(t_K=t_K, rsb_m3m3=rsb_arr, gamma_gas=gamma_gas, gamma_oil=gamma_oil)
 
-def unf_rsb_Mccain_m3m3(rsp_m3m3:FloatArray=10, 
-                        psp_MPaa:FloatArray=0.0, 
-                        tsp_K:FloatArray=0.0,
-                        gamma_oil:FloatArray=0.86, 
-                        )->FloatArray:
+    pb = np.interp(pb_atma, pb_arr, rsb_arr)
+    return pb
+
+def unf_rsb_from_rs_sep_Mccain_m3m3(rsp_m3m3:FloatArray=10, 
+                                    psp_MPaa:FloatArray=0.0, 
+                                    tsp_K:FloatArray=0.0,
+                                    gamma_oil:FloatArray=0.86, 
+                                    )->FloatArray:
     """
         Solution Gas-oil ratio at bubble point pressure calculation according to McCain (2002) correlation
     taking into account the gas losses at separator and stock tank
@@ -448,8 +468,7 @@ def unf_bo_below_pb_m3m3(rho_oil_st_kgm3:FloatArray=820,
     ref1 book Mccain_w_d_spivey_j_p_lenn_c_p_petroleum_reservoir_fluid,third edition, 2011
     """
     # коэффициенты преобразованы - смотри описанию в ноутбуке
-    bo = (rho_oil_st_kgm3 + uconst.RHO_AIR_kgm3 * rs_m3m3 * gamma_gas) / rho_oil_insitu_kgm3
-    return bo
+    return (rho_oil_st_kgm3 + uconst.RHO_AIR_kgm3 * rs_m3m3 * gamma_gas) / rho_oil_insitu_kgm3
 
 
 def unf_bo_saturated_Standing_m3m3(t_K:FloatArray=300,
@@ -613,7 +632,9 @@ def unf_rho_oil_Standing_kgm3(p_MPaa:FloatArray=1,
     """
     po = (uconst.RHO_WATER_SC_kgm3 * gamma_oil + uconst.RHO_AIR_kgm3 * gamma_gas * rs_m3m3) / bo_m3m3
         
-    return np.where(p_MPaa > pb_MPaa, po * np.exp(co_1MPa * (p_MPaa - pb_MPaa)), po)
+    return np.where(p_MPaa > pb_MPaa, 
+                    po * np.exp(co_1MPa * (p_MPaa - pb_MPaa)), 
+                    po)
 
 
 """ 
@@ -684,16 +705,6 @@ def unf_compressibility_oil_VB_1Mpa(p_MPaa:FloatArray,
                     uc.compr_1psi_2_1MPa( (-1433 + 5 * rs_scfstb + 17.2 * t_F - 1180 * gamma_gas + 12.61 * api) / (1e5 * p_psia)),
                     0.0
                     )
-
-
-def _unf_compessibility_oil_VB_1MPa_vba_(t_K:FloatArray, 
-                                       rsb_m3m3:FloatArray,
-                                       gamma_oil:FloatArray, 
-                                       gamma_gas:FloatArray,
-                                       )->FloatArray:
-    co_1atm = (28.1 * rsb_m3m3 + 30.6 * t_K - 1180 * gamma_gas + 1784 / gamma_oil - 10910)
-    return 1/uc.atm_2_bar(1/co_1atm)/10  #*))) **когда не дружишь с математикой ***когда слишком много времени потратил на uniflocpy
-    #TODO на сравнить с реализацией не vba и понять, что оставить
 
 
 """ 
