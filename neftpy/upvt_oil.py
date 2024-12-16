@@ -15,6 +15,9 @@ FloatArray = Union[float, np.ndarray]
 ====================================================================================================
 """
 
+def _unf_gas_molar_fraction_Standing(t_K:FloatArray=350, gamma_oil:FloatArray=0.86):
+    return uconst.RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil  # gas molar fraction
+
 def unf_pb_Standing_MPaa(t_K:FloatArray=350,
                          rsb_m3m3:FloatArray=100, 
                          gamma_oil:FloatArray=0.86, 
@@ -40,7 +43,8 @@ def unf_pb_Standing_MPaa(t_K:FloatArray=350,
     rsb_old = np.copy(rsb_m3m3)
     mask = rsb_old < min_rsb
     rsb_m3m3[mask] = min_rsb
-    yg = uconst.RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil         # gas molar fraction
+    yg = _unf_gas_molar_fraction_Standing(t_K, gamma_oil)
+    #yg = uconst.RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil        
     pb_MPaa = np.array(0.5197 * (rsb_m3m3 / gamma_gas) ** 0.83 * 10 ** yg)
     # for low rsb values, we set the asymptotics Pb = 1 atma at Rsb = 0
     # for large rsb values do not correct what the correlation gives
@@ -68,7 +72,8 @@ def unf_pb_Valko_MPaa(t_K:FloatArray=350,
 
     min_rsb = 1.8
     max_rsb = 800
-    rsb_m3m3 = np.array(rsb_m3m3)
+    t_K, rsb_m3m3, gamma_oil, gamma_gas = np.broadcast_arrays(t_K, rsb_m3m3, gamma_oil, gamma_gas)
+    #rsb_m3m3 = np.array(rsb_m3m3)
     rsb_old = np.copy(rsb_m3m3)
     mask_min = rsb_m3m3 < min_rsb
     mask_max = rsb_m3m3 > max_rsb
@@ -159,18 +164,15 @@ def unf_rs_Standing_m3m3(p_MPaa:FloatArray=1,
     ref2  "Стандарт компании Юкос. Физические свойства нефти. Методы расчета." Афанасьев В.Ю., Хасанов М.М. и др. 2002 г
     может считать в случае если нет давления насыщения и газосодержания при давлении насыщения, корреляция не точная
     """
-
-    yg = uconst.RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil
-
-    rs_m3m3 = np.where(pb_MPaa * rsb_m3m3 == 0, 
-                        gamma_gas * (1.92 * p_MPaa / 10 ** yg) ** 1.204, 
-                        np.where(p_MPaa < pb_MPaa, 
-                                rsb_m3m3 * np.divide(p_MPaa, pb_MPaa, 
-                                                    where=pb_MPaa!=0
-                                                    ) ** 1.204,
-                                rsb_m3m3
-                                )
-                        )
+    p_MPaa, t_K, pb_MPaa, rsb_m3m3, gamma_oil, gamma_gas = np.broadcast_arrays(p_MPaa, t_K, pb_MPaa, rsb_m3m3, gamma_oil, gamma_gas)
+    yg =  _unf_gas_molar_fraction_Standing(t_K, gamma_oil) 
+    mask = pb_MPaa * rsb_m3m3 == 0
+    rs_m3m3 = np.full_like(p_MPaa, fill_value=rsb_m3m3, dtype=np.float64)
+    rs_m3m3[mask] = gamma_gas[mask] * (1.92 * p_MPaa[mask] / 10 ** yg[mask]) ** 1.204
+    mask_undersaturated = (pb_MPaa * rsb_m3m3 != 0) & (p_MPaa < pb_MPaa)
+    rs_m3m3[mask_undersaturated] =  rsb_m3m3[mask_undersaturated] * np.divide(p_MPaa[mask_undersaturated], pb_MPaa[mask_undersaturated], 
+                                                    where=pb_MPaa[mask_undersaturated]!=0
+                                                    ) ** 1.204
     return rs_m3m3
 
 def unf_drs_dp_Standing_m3m3(p_MPaa:FloatArray=1, 
@@ -197,25 +199,24 @@ def unf_drs_dp_Standing_m3m3(p_MPaa:FloatArray=1,
     ref2  "Стандарт компании Юкос. Физические свойства нефти. Методы расчета." Афанасьев В.Ю., Хасанов М.М. и др. 2002 г
     может считать в случае если нет давления насыщения и газосодержания при давлении насыщения, корреляция не точная
     """
+    
+    p_MPaa, t_K, pb_MPaa, rsb_m3m3, gamma_oil, gamma_gas = np.broadcast_arrays(p_MPaa, t_K, pb_MPaa, rsb_m3m3, gamma_oil, gamma_gas)
+    yg =  _unf_gas_molar_fraction_Standing(t_K, gamma_oil) 
+    mask = pb_MPaa * rsb_m3m3 == 0
+    drs_dp = np.full_like(p_MPaa, fill_value=0.0, dtype=np.float64)
+    drs_dp[mask] = gamma_gas[mask] * (1.92 / 10**yg[mask]) ** 1.204 * 1.204 * p_MPaa[mask]**0.204
+    mask_undersaturated = (pb_MPaa * rsb_m3m3 != 0) & (p_MPaa < pb_MPaa)
+    drs_dp[mask_undersaturated] = rsb_m3m3[mask_undersaturated] * np.divide(1, pb_MPaa[mask_undersaturated], 
+                                                    where=pb_MPaa[mask_undersaturated]!=0
+                                                    ) ** 1.204 * p_MPaa[mask_undersaturated] ** 0.204
 
-    yg = uconst.RHO_AIR_kgm3 + 0.001648 * t_K - 1.769 / gamma_oil
-
-    drs_dp = np.where(pb_MPaa * rsb_m3m3 == 0, 
-                        gamma_gas * (1.92 / 10**yg) ** 1.204 * 1.204 * p_MPaa**0.204, 
-                        np.where(p_MPaa < pb_MPaa, 
-                                rsb_m3m3 * np.divide(1, pb_MPaa, 
-                                                    where=pb_MPaa!=0
-                                                    ) ** 1.204 * p_MPaa ** 0.204,
-                                0
-                                )
-                        )
     return drs_dp
 
 
 def unf_rsb_Standing_m3m3(pb_atma:FloatArray=10, 
-                          psp_MPaa:FloatArray=0.0, 
-                          tsp_K:FloatArray=0.0,
+                          t_K:FloatArray=0.0,
                           gamma_oil:FloatArray=0.86, 
+                          gamma_gas:FloatArray=0.8, 
                           )->FloatArray:
     """
     Расчет газосодержания при давлении насыщения
@@ -227,13 +228,11 @@ def unf_rsb_Standing_m3m3(pb_atma:FloatArray=10,
     :return: solution gas-oil ratio at bubble point pressure, rsb in m3/m3
 
     """
-
-    #return unf_rs_Standing_m3m3(p_MPaa=psp_MPaa, 
-    #                            t_K=tsp_K,
-    #                            pb_MPaa=0,
-    #                            rsb_m3m3=rsp_m3m3, 
-    #                            gamma_oil=gamma_oil, 
-    #                            gamma_gas=0.8)
+    return unf_rs_Standing_m3m3(p_MPaa=pb_atma, 
+                                t_K=t_K,
+                                pb_MPaa=0,
+                                gamma_oil=gamma_oil, 
+                                gamma_gas=gamma_gas)
 
 def _unf_rs_Velarde_m3m3_(p_MPaa:float=1, 
                           t_K:float=350,
@@ -319,38 +318,35 @@ def unf_rs_Velarde_m3m3(p_MPaa:FloatArray=1,
     J. VELARDE, T.A. BLASINGAME Texas A&M University, W.D. MCCAIN, JR. S.A. Holditch & Associates, Inc 1999
 
     """
-    pb_MPaa = np.array(pb_MPaa)
-    pr = np.where(pb_MPaa > uconst.P_SC_MPa, 
-                  uc.MPa_2_psig(p_MPaa)/(uc.MPa_2_psig(pb_MPaa)), 
-                  0
-                  )
 
-    _go_ = -0.929328621908127 + 1 / gamma_oil
-    _t_ = 0.0039158526769204 * t_K  - 1
-    _pb_ = pb_MPaa - uconst.P_SC_MPa
+    p_MPaa, t_K, pb_MPaa, rsb_m3m3, gamma_oil, gamma_gas = np.broadcast_arrays(p_MPaa, t_K, pb_MPaa, rsb_m3m3, gamma_oil, gamma_gas)
 
-    a1 = (0.0849029848623362 * gamma_gas**1.672608 * _go_**0.92987 *_t_**0.247235 * _pb_**1.056052) 
-    a2 = (1.20743882814017 * _go_ ** 0.337711 * _t_** 0.132795 * _pb_**0.302065) / (gamma_gas ** 1.00475)
-    a3 = 0.231607087371213 * _pb_ ** 0.047094 / ( gamma_gas**1.48548 * _go_**0.164741 * _t_**0.09133)
+    mask = pb_MPaa > uconst.P_SC_MPa
+    pr = np.zeros_like(pb_MPaa, dtype=np.float64)
+    pr[mask] = uc.MPa_2_psig(p_MPaa[mask])/(uc.MPa_2_psig(pb_MPaa[mask]))
 
     
     pb_estimation_Valko_McCain = unf_pb_Valko_MPaa(rsb_m3m3=uconst.RS_MAX_Velarde,
                                                    gamma_oil=gamma_oil,
                                                    gamma_gas=gamma_gas,
                                                    t_K=t_K)
-     
-    rs_m3m3 = np.where(pb_MPaa > pb_estimation_Valko_McCain, 
-                       np.where(p_MPaa < pb_MPaa,
-                                rsb_m3m3 * np.divide(p_MPaa, pb_MPaa, where=pb_MPaa!=0),
-                                rsb_m3m3),
-                       np.where(pr <= 0, 
-                                0.0,
-                                np.where( pr < 1, 
-                                            (a1 * pr ** a2 + (1 - a1) * pr ** a3) * rsb_m3m3,
-                                            rsb_m3m3
-                                            ) 
-                                    )
-                        )
+
+    mask1 = (pb_MPaa > pb_estimation_Valko_McCain) & (p_MPaa < pb_MPaa) 
+    rs_m3m3 = np.full_like(rsb_m3m3, fill_value=rsb_m3m3, dtype=np.float64)
+    rs_m3m3[mask1] = rsb_m3m3[mask1] * np.divide(p_MPaa[mask1], pb_MPaa[mask1], where=pb_MPaa[mask1]!=0)
+
+    mask2 = (pb_MPaa <= pb_estimation_Valko_McCain) & (pr <= 0)
+    rs_m3m3[mask2] = 0
+
+    mask3 = (pb_MPaa <= pb_estimation_Valko_McCain) & (pr > 0) & (pr < 1)
+    _go_ = -0.929328621908127 + 1 / gamma_oil[mask3]
+    _t_ = 0.0039158526769204 * t_K[mask3]  - 1
+    _pb_ = pb_MPaa[mask3] - uconst.P_SC_MPa
+    a1 = (0.0849029848623362 * gamma_gas[mask3]**1.672608 * _go_**0.92987 *_t_**0.247235 * _pb_**1.056052) 
+    a2 = (1.20743882814017 * _go_ ** 0.337711 * _t_** 0.132795 * _pb_**0.302065) / (gamma_gas[mask3] ** 1.00475)
+    a3 = 0.231607087371213 * _pb_ ** 0.047094 / ( gamma_gas[mask3]**1.48548 * _go_**0.164741 * _t_**0.09133)
+    rs_m3m3[mask3] = (a1 * pr[mask3] ** a2 + (1 - a1) * pr[mask3] ** a3) * rsb_m3m3[mask3]
+    
     #TODO rnt можно добавить тут расчет производной - в vba версии есть
 
     return rs_m3m3
