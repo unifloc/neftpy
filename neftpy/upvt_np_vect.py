@@ -5,6 +5,7 @@ from neftpy.uconst import *
 import neftpy.upvt_oil as pvto
 import neftpy.upvt_gas as pvtg
 import neftpy.upvt_wat as pvtw
+import neftpy.upvt_mixture as pvtmix
 
 import numpy as np
 
@@ -188,3 +189,15 @@ unf_mu_water_McCain_cP = pvtw.unf_mu_water_McCain_cP
 unf_gamma_water_from_salinity_m3m3 = pvtw.unf_gamma_water_from_salinity_m3m3
 
 unf_salinity_from_gamma_water_ppm =pvtw.unf_salinity_from_gamma_water_ppm
+
+""" 
+====================================================================================================
+поверхностное натяжение на границе нефть-газ, вода - газ
+====================================================================================================
+"""
+
+unf_surface_tension_Baker_Sverdloff_Nm = np.vectorize(pvtmix.unf_surface_tension_Baker_Sverdloff_Nm)
+
+unf_surface_tension_gw_Sutton_Nm = pvtmix.unf_surface_tension_gw_Sutton_Nm
+
+unf_surface_tension_go_Abdul_Majeed_Nm = pvtmix.unf_surface_tension_go_Abdul_Majeed_Nm
